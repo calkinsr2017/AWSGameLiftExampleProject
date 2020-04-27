@@ -8,13 +8,13 @@ This is an example project for building an unreal FPS with AWS gamelift
 In VS 2019, make sure you have the latest .NET Framwork SDK (4.8) and all previous targeting packs
 Make sure you also have cmake downloaded and added to your environment paths. In command prombt, make sure "cmake --help" works
 
-Environment variables Path
+Environment variables Path:
 - C:\Program Files\CMake\bin
 - C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin
 
-New Variable 
--Name: VS150COMNTOOLS
--alue: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools
+New Variable:
+- Name: VS150COMNTOOLS
+- value: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools
 
 steps to generate aws-cpp-sdk-gamelift-server.dll and .lib files:
 1. Download Amazon Gamelift Server SDK (4.0.0) 
