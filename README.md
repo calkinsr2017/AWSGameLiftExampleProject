@@ -86,7 +86,7 @@ It takes a long time to upload to AWS and to get a fleet going. We can launch lo
 1. Go Back into The ServerSDK file we downloaded and drag the GameLiftLocal folder to convientent location
 2. Command prompt and cd into GameLiftLocal
    - ` java -jar GameLiftLocal.jar -p 9080 ` If for some reason the java command doesnt work: https://github.com/julienvollering/MIAmaxent/issues/2
-   - this will start a aws cliant on port 9080. We can then go on to open up our packaged build. The command prompt will hang until you close it
+   - this will start a aws cliant on port 9080.(9081 if 9080 doesnt work) We can then go on to open up our packaged build. The command prompt will hang until you close it
      - you will notice that AWS is calling our call back functions in the project!! "onReportHealth received from /127.0.0.1:60333 with health status: healthy"
      - This process is gamelift running locally, hence the name. You should notice it is running on port: 7779. It calls health reports every 60 seconds and our local server responds back
 3. Open a new command prompt and cd into C:\Users\MPLEX\Documents\Unreal Projects\AWSGameLiftExampleProject\WindowsServer\GameLiftTutorial\Binaries\Win64
@@ -94,7 +94,33 @@ It takes a long time to upload to AWS and to get a fleet going. We can launch lo
    - ` GameLiftTutorialServer.exe -log -port=7779 ` This will launch a new window, showing logs of the running server
      
 4. Open a new command prompt to start running CLI commands
-   - ` aws gamelift create-game-session --endpoint-url http://localhost:9080 --maximum-player-session-count 2 --fleet-id fleet-123 `
+   - ` aws gamelift create-game-session --endpoint-url http://localhost:9081 --maximum-player-session-count 2 --fleet-id fleet-123 `
 
+
+### Upload build to AWS console (will be using US-east-1
+
+1. In order to run successfully on an EC2 instance we need visual c++ redistributable file.
+   - https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads (get x64 if you dont have it already)
+   - copy the downloaded file into the WindowsServer package build folder.
+
+2. In notepad type out the following and name it install.bat, will automatically install and run files necassary to run games built in VS. Save this in WIndowsServer folder
+  ``` 
+  VC_redist.x64.exe /q
+  Engine\Extras\Redist\en-us\UE4PrereqSetup_x64.exe /q
+  ```
+3. Upload build to aws with the following command
+  - ` aws gamelift upload-build --name <your build name> --build-version <your build number> --build-root <local build path> --operating-system WINDOWS_2012 --region us-east-1 `
+  - This build specific `aws gamelift upload-build --name GameLiftTutorial --build-version 1.0.0 --build-root "C:\Users\MPLEX\Documents\Unreal Projects\AWSGameLiftExampleProject\WindowsServer"  --operating-system WINDOWS_2012 --region us-east-1 `
+
+4. If you go to aws gamelift console you will now see a build under us-east-1
+
+### Creating a fleet
+1. https://youtu.be/_A4JiDY24gM?t=1004
+
+###### Notes
+1. Fleet type
+   - On-Demand: more expensive fixed cost fleet that you can have whenever and for however long you want them.
+   - Spot: cheaper, will drop with a two minute warning, less available, not a fixed price. better choice most of the time. Fleet-IQ uses a queue to decide which fleets to launch.
+2. Instance Role ARN: Can be used to give this fleet access to other AWS features. ex) want server to read and write from DynamoDB, could attach the role to the fleet here
 
 # Matchmaking 
