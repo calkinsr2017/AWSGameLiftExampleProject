@@ -49,7 +49,7 @@ follw this before running locally or putting on aws
 
 
 # Upload to AWS (Fleet, Queue) 
-
+Everything that goes in a fleet - https://youtu.be/_A4JiDY24gM?t=1004
 
 ### Need to create a IAM Policy and user. 
 1. IAM -> Policies -> Create Policy
