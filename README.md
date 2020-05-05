@@ -91,7 +91,7 @@ It takes a long time to upload to AWS and to get a fleet going. We can launch lo
      - This process is gamelift running locally, hence the name. You should notice it is running on port: 7779. It calls health reports every 60 seconds and our local server responds back
 3. Open a new command prompt and cd into C:\Users\MPLEX\Documents\Unreal Projects\AWSGameLiftExampleProject\WindowsServer\GameLiftTutorial\Binaries\Win64
    - This is our generated package build executable
-   - ` GameLiftTutorialServer.exe -log -port=7779 ` This will launch a new window, showing logs of the running server
+   - ` ./GameLiftTutorialServer.exe -log -port=7779 ` This will launch a new window, showing logs of the running server
      
 4. Open a new command prompt to start running CLI commands
    - ` aws gamelift create-game-session --endpoint-url http://localhost:9080 --maximum-player-session-count 2 --fleet-id fleet-123 `
