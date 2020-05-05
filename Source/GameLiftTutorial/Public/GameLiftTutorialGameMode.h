@@ -1,12 +1,9 @@
-// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameLiftServerSDK.h"
 #include "GameFramework/GameModeBase.h"
 #include "GameLiftTutorialGameMode.generated.h"
-
 
 USTRUCT()
 struct FStartGameSessionState
@@ -73,6 +70,7 @@ protected:
 private:
 	UPROPERTY()
 		FStartGameSessionState StartGameSessionState;
+
 	UPROPERTY()
 		FUpdateGameSessionState UpdateGameSessionState;
 
@@ -81,9 +79,4 @@ private:
 
 	UPROPERTY()
 		FHealthCheckState HealthCheckState;
-
-
 };
-
-
-

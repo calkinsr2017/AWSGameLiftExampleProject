@@ -24,7 +24,7 @@ void AGameLiftTutorialGameMode::BeginPlay() {
 	if (InitSDKOutcome.IsSuccess()) {
 
 		//bridge between game session being invoked by the server SDK and our game. Has info on players involved
-		auto OnStartGameSession = [](Aws:: GameLift::Server::Model::GameSession GameSessionObj, void* Params) 
+		auto OnStartGameSession = [](Aws::GameLift::Server::Model::GameSession GameSessionObj, void* Params)
 		{
 			FStartGameSessionState* State = (FStartGameSessionState*)Params;
 
@@ -32,7 +32,7 @@ void AGameLiftTutorialGameMode::BeginPlay() {
 		};
 
 		//contains info on players that want to join as well as current players. Will be used for backfile
-		auto OnUpdateGameSession = [](Aws::GameLift::Server::Model::UpdateGameSession UpdateGameSessionObj, void* Params) 
+		auto OnUpdateGameSession = [](Aws::GameLift::Server::Model::UpdateGameSession UpdateGameSessionObj, void* Params)
 		{
 			FUpdateGameSessionState* State = (FUpdateGameSessionState*)Params;
 		};
@@ -40,27 +40,26 @@ void AGameLiftTutorialGameMode::BeginPlay() {
 
 		//called if one of 3 conditions is met. 1) Gamelift determined server processes is unhealthy 2) EC2 interuption occurs 3) fleet instance compacity goes down
 		//Gamelift telling us that the process will end soon and we have responsibility do shut things down
-		auto OnProcessTerminate = [](void* Params) 
+		auto OnProcessTerminate = [](void* Params)
 		{
-
 			FProcessTerminateState* State = (FProcessTerminateState*)Params;
 			//relays information back to the server
 			auto GetTerminationTimeOutcome = Aws::GameLift::Server::GetTerminationTime();
 			if (GetTerminationTimeOutcome.IsSuccess()) {
 				State->TerminationTime = GetTerminationTimeOutcome.GetResult();
 			}
-			
+
 			auto ProcessEndingOutcome = Aws::GameLift::Server::ProcessEnding();
 
 			if (ProcessEndingOutcome.IsSuccess()) {
-
-				State->Status = true; //pass back do some server cleanup here
-				FGenericPlatformMisc::RequestExit(false); //nothing fancy shutting it down
+				State->Status = true;
+				FGenericPlatformMisc::RequestExit(false);
 			}
 		};
 
 		//called every 60 seconds by gamelift to check if server process is healthy. If for whatever reason server process is unhealthy, the above callback function will be invoked
-		auto OnHealthCheck = [](void* Params) {
+		auto OnHealthCheck = [](void* Params)
+		{
 			FHealthCheckState* State = (FHealthCheckState*)Params;
 			State->Status = true;
 
@@ -84,7 +83,6 @@ void AGameLiftTutorialGameMode::BeginPlay() {
 			if (Str.Split("=", &Key, &Value)) {
 				if (Key.Equals("port")) {
 					Port = FCString::Atoi(*Value);
-
 				}
 			}
 		}
