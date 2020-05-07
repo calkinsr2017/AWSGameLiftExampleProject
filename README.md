@@ -116,6 +116,12 @@ It takes a long time to upload to AWS and to get a fleet going. We can launch lo
 
 ### Creating a fleet
 1. https://youtu.be/_A4JiDY24gM?t=1004
+2. Fill out name and description. Set instance to Spot.
+3. Launch path - do the folder with the server executable. Set port `7777` and `7778`.
+4. EC2 port settings
+Port ranges: `7777-7778`
+Protocol: ***UDP***
+IP Address Range: 0.0.0.0/0
 
 ###### Notes
 1. Fleet type
