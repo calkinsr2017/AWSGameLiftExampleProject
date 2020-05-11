@@ -1,5 +1,5 @@
-#include "CognitoIdentityModulePrivatePCH.h"
 #include "CognitoIdentityModule.h"
+#include "CognitoIdentityModulePrivatePCH.h"
 #include "GameLiftClientSDK/Public/GameLiftClientGlobals.h"
 #include "Interfaces/IPluginManager.h"
 

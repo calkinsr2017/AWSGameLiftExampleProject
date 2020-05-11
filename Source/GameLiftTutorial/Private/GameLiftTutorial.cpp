@@ -5,3 +5,4 @@
 
 IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, GameLiftTutorial, "GameLiftTutorial" );
  
+DEFINE_LOG_CATEGORY(LogAWS);

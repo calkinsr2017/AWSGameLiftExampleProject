@@ -88,7 +88,7 @@ void AGameLiftTutorialGameMode::BeginPlay() {
 			}
 		}
 
-		if (!StartTCPReceiver("SocketListener", ))
+		//if (!StartTCPReceiver("SocketListener", ))
 
 		//every time a gamesession starts gamelift generates files for loging, that file will be called aLogFile.txt
 		const char* LogFile = "aLogFile.txt";

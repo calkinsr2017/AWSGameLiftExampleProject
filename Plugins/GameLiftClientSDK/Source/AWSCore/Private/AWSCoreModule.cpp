@@ -1,5 +1,5 @@
-#include "AWSCoreModulePrivatePCH.h"
 #include "AWSCoreModule.h"
+#include "AWSCoreModulePrivatePCH.h"
 #include "GameLiftClientSDK/Public/GameLiftClientGlobals.h"
 #include "Interfaces/IPluginManager.h"
 
