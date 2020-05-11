@@ -17,7 +17,8 @@ class GAMELIFTTUTORIAL_API UMainMenuWidget : public UUserWidget
 
 public:
 	UMainMenuWidget(const FObjectInitializer& ObjectInitializer);
-	
+	void NativeConstruct();
+
 protected:
 	bool FailedToJoinGame;
 	bool SucceededToJoinGame;
