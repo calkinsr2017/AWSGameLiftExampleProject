@@ -1,19 +1,24 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "{4CA8A385-4BA1-ED91-556A-A6B5E4DF415F}",
+	"EngineAssociation": "{149FAC1D-40B3-56D3-B0BB-51AED949D11E}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
 		{
 			"Name": "GameLiftTutorial",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"UMG",
+				"Engine",
+				"CoreUObject"
+			]
 		}
 	],
 	"Plugins": [
 		{
 			"Name": "GameLiftServerSDK",
-			"Enabled":  true
+			"Enabled": true
 		}
 	]
 }

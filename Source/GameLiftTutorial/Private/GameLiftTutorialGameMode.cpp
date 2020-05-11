@@ -11,6 +11,7 @@ AGameLiftTutorialGameMode::AGameLiftTutorialGameMode()
 	if (PlayerPawnBPClass.Class != NULL)
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
+		//Test
 	}
 }
 
@@ -86,6 +87,8 @@ void AGameLiftTutorialGameMode::BeginPlay() {
 				}
 			}
 		}
+
+		if (!StartTCPReceiver("SocketListener", ))
 
 		//every time a gamesession starts gamelift generates files for loging, that file will be called aLogFile.txt
 		const char* LogFile = "aLogFile.txt";

@@ -75,4 +75,9 @@ DerivedDataCache/*
 
 WindowsServer/*
 
+# Any key information that can be retrieved here
+Credentials/*
+
+WindowsNoEditor/*
+
 Keys.txt
