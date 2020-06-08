@@ -2,7 +2,6 @@
 
 
 #include "MainMenuHud.h"
-#include "Blueprint/UserWidget.h"
 #include "UObject/ConstructorHelpers.h"
 
 AMainMenuHud::AMainMenuHud()
@@ -26,7 +25,7 @@ void AMainMenuHud::BeginPlay()
 		UUserWidget* MainMenuWidget = CreateWidget<UUserWidget>(GetWorld(), MainMenuWidgetClass);
 		if(MainMenuWidget != nullptr)
 		{
-			MainMenuWidget -> AddToViewport();
+			MainMenuWidget->AddToViewport();
 			MainMenuWidget->SetFocus();
 		}
 	}

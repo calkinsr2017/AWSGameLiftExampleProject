@@ -13,5 +13,7 @@ UCLASS()
 class GAMELIFTTUTORIAL_API UMainMenuWidget : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
+	//The "BeginPlay" but for widget classes
+	void NativeConstruct() override;
 };
