@@ -111,6 +111,7 @@ void UMainMenuWidget::OnExchangeCodeForTokensResponseRecieved(FHttpRequestPtr Re
 					UGameLiftTutorialGameInstance* GameLiftTutorialGameInstance = Cast<UGameLiftTutorialGameInstance>(GameInstance);
 					if(GameLiftTutorialGameInstance != nullptr)
 					{
+						//Pass the tokens for use with the AWS console
 						GameLiftTutorialGameInstance->SetCognitoTokens(JsonObject->GetStringField("access_token"), JsonObject->GetStringField("id_token"), JsonObject->GetStringField("refresh_token"));
 					}
 				}

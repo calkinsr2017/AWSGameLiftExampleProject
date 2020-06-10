@@ -1,10 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "GameLiftTutorialGameInstance.h"
+
+#include "GameLiftTutorial.h"
 #include "Json.h"
 #include "JsonUtilities.h"
 #include "TextReaderComponent.h"
+#include "TimerManager.h"
+#include "Engine/World.h"
 
 UGameLiftTutorialGameInstance::UGameLiftTutorialGameInstance()
 {
@@ -13,7 +16,7 @@ UGameLiftTutorialGameInstance::UGameLiftTutorialGameInstance()
 	ApiUrl = TextReader->ReadFile("Urls/ApiUrl.txt");
 
 	HttpModule = &FHttpModule::Get();
-	
+
 }
 
 
@@ -33,16 +36,19 @@ void UGameLiftTutorialGameInstance::Shutdown()
 	}
 }
 
-
+/* ============================================== COGNITO STUFF ================================================ */
 void UGameLiftTutorialGameInstance::SetCognitoTokens(FString NewAccessToken, FString NewIDToken, FString NewRefreshToken)
 {
 	AccessToken = NewAccessToken;
 	IdToken = NewIDToken;
 	RefreshToken = NewRefreshToken;
 
-	UE_LOG(LogTemp, Warning, TEXT("access token: %s"), *AccessToken);
-	UE_LOG(LogTemp, Warning, TEXT("refresh token: %s"), *RefreshToken);
+	UE_LOG(LogAWS, Log, TEXT("access token: %s"), *AccessToken);
+	UE_LOG(LogAWS, Log, TEXT("refresh token: %s"), *RefreshToken);
 
+	//TODO - Error? why is this 3300
+	//Refresh every 60 minutes?
+	//60seconds* 60 minutes = 3600 seconds 
 	GetWorld()->GetTimerManager().SetTimer(RetrieveNewTokensHandle, this, &UGameLiftTutorialGameInstance::RetrieveNewTokens, 1.0f, false, 3300.0f);
 }
 
@@ -83,6 +89,7 @@ void UGameLiftTutorialGameInstance::OnRetrieveNewTokensResponseReceived(FHttpReq
 		{
 			if(!JsonObject->HasField("error"))
 			{
+				//Succesfully received tickets
 				SetCognitoTokens(JsonObject->GetStringField("accessToken"), JsonObject->GetStringField("idToken"), RefreshToken);
 			} else
 			{
@@ -94,6 +101,6 @@ void UGameLiftTutorialGameInstance::OnRetrieveNewTokensResponseReceived(FHttpReq
 		GetWorld()->GetTimerManager().SetTimer(RetrieveNewTokensHandle, this, &UGameLiftTutorialGameInstance::RetrieveNewTokens, 1.0f, false, 30.0f);
 	}
 }
-
+/* ======================================================================================================================================= */
 
 
