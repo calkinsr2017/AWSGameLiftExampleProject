@@ -4,12 +4,14 @@
 #include "TextReaderComponent.h"
 
 
-#include "HAL/FileManager.h"
-#include "Misc/FileHelper.h"
+
+#include "Engine/Engine.h"
+#include "Runtime/Core/Public/HAL/FileManager.h"
+#include "Runtime/Core/Public/Misc/FileHelper.h"
 #include "Runtime/Core/Public/Misc/Paths.h"
 #include "Runtime/Core/Public/HAL/PlatformFilemanager.h"
 
-// Sets default values for this component's properties
+
 UTextReaderComponent::UTextReaderComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
@@ -20,25 +22,18 @@ UTextReaderComponent::UTextReaderComponent()
 FString UTextReaderComponent::ReadFile(FString filePath)
 {
 	//Read file from [project]/filePath/
-	FString FolderPath = FPaths::ProjectContentDir() + "Credentials";
-	FString Directory = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FolderPath);
-
-	FString Result = "";
+	FString DirectoryPath = FPaths::ProjectContentDir();
+	FString FullPath = DirectoryPath + "/" + filePath;
+	FString Result;
 	IPlatformFile& file = FPlatformFileManager::Get().GetPlatformFile();
-	if (file.CreateDirectory(*Directory)) {
-		FString myFile = Directory + "/" + filePath;
+	//IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*DirectoryPath);
 
-		if (GEngine) {
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, "Attempting to locate: " + myFile);
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, "in directory: " + Directory);
-		}
-
-		FFileHelper::LoadFileToString(Result, *myFile);
-
-		if (GEngine) {
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, "Result: " + Result);
-		}
+	if(file.FileExists(*FullPath))
+	{
+		FFileHelper::LoadFileToString(Result, *FullPath);
 	}
+	
+
 
 	return Result;
 }
