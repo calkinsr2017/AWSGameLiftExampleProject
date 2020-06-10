@@ -16,5 +16,7 @@ public:
 	// Sets default values for this component's properties
 	UTextReaderComponent();
 
-	FString ReadFile(FString filePath);
+
+	UFUNCTION()
+		FString ReadFile(FString filePath);
 };
