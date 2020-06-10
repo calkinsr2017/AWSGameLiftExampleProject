@@ -40,8 +40,8 @@ void UGameLiftTutorialGameInstance::SetCognitoTokens(FString NewAccessToken, FSt
 	IdToken = NewIDToken;
 	RefreshToken = NewRefreshToken;
 
-	//UE_LOG(LogTemp, Warning, TEXT("access token: %s"), *AccessToken);
-	//UE_LOG(LogTemp, Warning, TEXT("refresh token: %s"), *RefreshToken);
+	UE_LOG(LogTemp, Warning, TEXT("access token: %s"), *AccessToken);
+	UE_LOG(LogTemp, Warning, TEXT("refresh token: %s"), *RefreshToken);
 
 	GetWorld()->GetTimerManager().SetTimer(RetrieveNewTokensHandle, this, &UGameLiftTutorialGameInstance::RetrieveNewTokens, 1.0f, false, 3300.0f);
 }
