@@ -1,0 +1,7 @@
+(1) - Have the client set its login token in the Main Menu.
+(2) - Once successfully logged in, ticket search will begin.
+(3) - Once ticket is found, check matchmaking status. If succeeded,
+will allow the server to save the playersession Id and do a transfer via the GameInstance.
+(3) - When the people are transferred, accept their player session in the Game Mode and then can store a global cache for that.
+(4) - Start matchmaking and backfill requests.
+(5) - Remove player sesion on logout. Terminate the game session on AWS
