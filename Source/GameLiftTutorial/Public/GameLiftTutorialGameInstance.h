@@ -33,6 +33,9 @@ public:
 	UPROPERTY()
 		FTimerHandle RetrieveNewTokensHandle;
 
+	//Set by the MatchmakingWidget class
+	FString MatchmakingTicketId;
+
 	UFUNCTION()
 		void SetCognitoTokens(FString NewAccessToken, FString NewIDToken, FString NewRefreshToken);
 
@@ -46,5 +49,5 @@ private:
 		void RetrieveNewTokens();
 
 	void OnRetrieveNewTokensResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	
+
 };
