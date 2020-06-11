@@ -7,6 +7,8 @@
 #include "Runtime/Online/HTTP/Public/Http.h"
 #include "MainMenuWidget.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLoginCompleteEvent);
 class UWebBrowser;
 /**
  * 
@@ -19,6 +21,11 @@ class GAMELIFTTUTORIAL_API UMainMenuWidget : public UUserWidget
 public:
 	UMainMenuWidget(const FObjectInitializer& ObjectInitializer);
 	//The "BeginPlay" but for widget classes
+
+
+	UPROPERTY(BlueprintAssignable)
+		FOnLoginCompleteEvent OnLoginComplete;
+
 protected:
 	virtual void NativeConstruct() override;
 

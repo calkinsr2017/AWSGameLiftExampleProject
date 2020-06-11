@@ -113,6 +113,10 @@ void UMainMenuWidget::OnExchangeCodeForTokensResponseRecieved(FHttpRequestPtr Re
 					{
 						//Pass the tokens for use with the AWS console
 						GameLiftTutorialGameInstance->SetCognitoTokens(JsonObject->GetStringField("access_token"), JsonObject->GetStringField("id_token"), JsonObject->GetStringField("refresh_token"));
+
+						//Call to switch widgets once used
+						OnLoginComplete.Broadcast();
+
 					}
 				}
 			}
