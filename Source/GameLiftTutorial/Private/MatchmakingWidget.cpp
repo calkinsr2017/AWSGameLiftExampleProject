@@ -16,10 +16,10 @@
 UMatchmakingWidget::UMatchmakingWidget(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
 	UTextReaderComponent* TextReader = CreateDefaultSubobject<UTextReaderComponent>(TEXT("TextReaderComp"));
 
-	FString ApiUrl = TextReader->ReadFile("SecretUrls/ApiUrl.txt");
+	FString ApiUrl = TextReader->ReadFile("Urls/ApiUrl.txt");
 
-	LookForMatchUrl = ApiUrl + "/lookformatch";
-	CancelMatchLookupUrl = ApiUrl + "/cancelmatchlookup";
+	LookForMatchUrl = ApiUrl + "/startmatchmaking";
+	CancelMatchLookupUrl = ApiUrl + "/stopmatchmakingmike";
 	PollMatchmakingUrl = ApiUrl + "/pollmatchmaking";
 
 	HttpModule = &FHttpModule::Get();
@@ -33,6 +33,8 @@ void UMatchmakingWidget::BeginMatchmaking(int32 InNumPlayers)
 	UGameLiftTutorialGameInstance* GLGI = Cast<UGameLiftTutorialGameInstance>(GetGameInstance());
 	MatchmakingTicketId = GLGI->MatchmakingTicketId;
 	AccessToken = GLGI->AccessToken;
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Got into Begin matchmaking");
 
 	//Reset variables here related to searching
 	bSearchingForGame = false;
@@ -63,7 +65,7 @@ void UMatchmakingWidget::OnInitiateMatchmakingResponseReceived(FHttpRequestPtr R
 		//Deserialize the json data given Reader and the actual object to deserialize
 		if (FJsonSerializer::Deserialize(Reader, JsonObject))
 		{
-			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString("response: ") + Response->GetContentAsString());
+			UE_LOG(LogAWS, Log, TEXT("response: %s"), *Response->GetContentAsString());
 
 			MatchmakingTicketId = JsonObject->GetStringField("ticketId");
 
@@ -77,6 +79,10 @@ void UMatchmakingWidget::OnInitiateMatchmakingResponseReceived(FHttpRequestPtr R
 			//AWS recommends to only poll every 10 seconds for optimization
 			GetWorld()->GetTimerManager().SetTimer(PollMatchmakingHandle, this, &UMatchmakingWidget::PollMatchmaking, 1.0f, false, 10.0f);
 			bSearchingForGame = true;
+
+
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Initializing matchmaking request");
+
 
 			//TODO - Handle currently looking for a match with widget stuff
 		}
