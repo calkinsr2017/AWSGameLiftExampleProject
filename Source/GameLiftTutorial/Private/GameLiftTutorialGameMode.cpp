@@ -51,7 +51,7 @@ void AGameLiftTutorialGameMode::PreLogin(const FString& Options, const FString& 
 			if (DescribePlayerSessionsOutcome.IsSuccess()) {
 				UE_LOG(LogAWS, Log, TEXT("Describe player sessions call succeeded!"));
 				auto DescribePlayerSessionsResult = DescribePlayerSessionsOutcome.GetResult();
-				uint8 Count = 1;
+				int Count = 1;
 				//Do a call to get our own PlayerId just to debug what that looks like
 				auto PlayerSessions = DescribePlayerSessionsResult.GetPlayerSessions(Count);
 				if (PlayerSessions != nullptr) {

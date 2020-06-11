@@ -1,16 +1,17 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
-#include "GameLiftTutorial.h"
 #include "MatchmakingWidget.h"
+#include "GameLiftTutorial.h"
 #include "GameLiftTutorialGameInstance.h"
 #include "TextReaderComponent.h"
 #include "TimerManager.h"
 #include "Components/TextBlock.h"
-#include "Dom/JsonObject.h"
+//#include "Dom/JsonObject.h"
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
+#include "Json.h"
+#include "JsonUtilities.h"
 
 UMatchmakingWidget::UMatchmakingWidget(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
 	UTextReaderComponent* TextReader = CreateDefaultSubobject<UTextReaderComponent>(TEXT("TextReaderComp"));
@@ -64,7 +65,7 @@ void UMatchmakingWidget::OnInitiateMatchmakingResponseReceived(FHttpRequestPtr R
 		{
 			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString("response: ") + Response->GetContentAsString());
 
-			FString MatchmakingTicketId = JsonObject->GetStringField("ticketId");
+			MatchmakingTicketId = JsonObject->GetStringField("ticketId");
 
 			UGameInstance* GameInstance = GetGameInstance();
 			if (GameInstance != nullptr) {
@@ -133,7 +134,7 @@ void UMatchmakingWidget::OnPollMatchmakingResponseReceived(FHttpRequestPtr Reque
 		//Deserialize the json data given Reader and the actual object to deserialize
 		if (FJsonSerializer::Deserialize(Reader, JsonObject))
 		{
-			TSharedPtr<FJsonObject> Ticket = JsonObject->GetStringField("ticket");
+			TSharedPtr<FJsonObject> Ticket = JsonObject->GetObjectField("ticket");
 			FString TicketStatus = Ticket->GetObjectField("Type")->GetStringField("S");
 
 			if (TicketStatus.Compare("MatchmakingSearching") == 0)
@@ -144,7 +145,7 @@ void UMatchmakingWidget::OnPollMatchmakingResponseReceived(FHttpRequestPtr Reque
 			else if (TicketStatus.Compare("MatchmakingSucceeded") == 0) {
 				// if check is to deal with a race condition involving the user pressing the cancel button
 				if (bSearchingForGame) {
-					MatchmakingButton->SetIsEnabled(false);
+					//MatchmakingButton->SetIsEnabled(false);
 					bSearchingForGame = false;
 
 					//TODO - Reset the widget and say we successfully found a match
@@ -199,14 +200,7 @@ void UMatchmakingWidget::OnPollMatchmakingResponseReceived(FHttpRequestPtr Reque
 					}
 				}
 			}
-		}
-		else {
-			GetWorld()->GetTimerManager().SetTimer(PollMatchmakingHandle, this, &UMatchmakingWidget::PollMatchmaking, 1.0f, false, 10.0f);
-		}
-	}
-	else {
-		GetWorld()->GetTimerManager().SetTimer(PollMatchmakingHandle, this, &UMatchmakingWidget::PollMatchmaking, 1.0f, false, 10.0f);
-	}
+		} 
 	}
 }
 
@@ -290,3 +284,4 @@ void UMatchmakingWidget::FetchCurrentTokenStatus()
 		}
 	}
 }
+
