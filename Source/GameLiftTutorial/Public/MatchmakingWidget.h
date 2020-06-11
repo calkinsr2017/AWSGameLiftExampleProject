@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "HttpModule.h"
-#include "BackgroundHTTP/Public/GenericPlatform/GenericPlatformBackgroundHttpResponse.h"
 #include "Blueprint/UserWidget.h"
 #include "MatchmakingWidget.generated.h"
 
@@ -14,7 +13,7 @@
 UCLASS()
 class GAMELIFTTUTORIAL_API UMatchmakingWidget : public UUserWidget
 {
-	GENERATED_BODY()
+	GENERATED_UCLASS_BODY()
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -24,7 +23,7 @@ public:
 	void FetchCurrentTokenStatus();
 	
 protected:
-	void UMatchmakingWidget::OnInitiateMatchmakingResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnInitiateMatchmakingResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 public:
 	UFUNCTION(BlueprintCallable)
