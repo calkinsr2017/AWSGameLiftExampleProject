@@ -36,6 +36,9 @@ private:
 	//Called every 10 seconds by the AWS server
 	void PollMatchmaking();
 
+	UPROPERTY()
+		bool SearchingForGame;
+	
 protected:
 	void OnPollMatchmakingResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
@@ -45,7 +48,7 @@ protected:
 	FString AccessToken;
 	FHttpModule* HttpModule;
 	
-	bool bSearchingForGame;
+	
 	FTimerHandle PollMatchmakingHandle;
 
 private:

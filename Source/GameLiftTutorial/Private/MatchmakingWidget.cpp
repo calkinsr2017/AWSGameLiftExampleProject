@@ -23,32 +23,39 @@ UMatchmakingWidget::UMatchmakingWidget(const FObjectInitializer& ObjectInitializ
 	PollMatchmakingUrl = ApiUrl + "/pollmatchmaking";
 
 	HttpModule = &FHttpModule::Get();
-	bSearchingForGame = false;
+	SearchingForGame = false;
 }
 
 void UMatchmakingWidget::BeginMatchmaking(int32 InNumPlayers)
 {
 	//TODO - Get ID from google cognito and log into AWS service with player ID
 
-	UGameLiftTutorialGameInstance* GLGI = Cast<UGameLiftTutorialGameInstance>(GetGameInstance());
-	MatchmakingTicketId = GLGI->MatchmakingTicketId;
-	AccessToken = GLGI->AccessToken;
-
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Got into Begin matchmaking");
-
-	//Reset variables here related to searching
-	bSearchingForGame = false;
-
-	if (AccessToken.Len() > 0)
+	if (!SearchingForGame)
 	{
-		//Initiate Matchmaking request
-		TSharedRef<IHttpRequest> InitiateMatchmakingRequest = HttpModule->CreateRequest();
-		InitiateMatchmakingRequest->OnProcessRequestComplete().BindUObject(this, &UMatchmakingWidget::OnInitiateMatchmakingResponseReceived);
-		InitiateMatchmakingRequest->SetURL(LookForMatchUrl);
-		InitiateMatchmakingRequest->SetVerb("GET");
-		InitiateMatchmakingRequest->SetHeader("Authorization", AccessToken);
-		InitiateMatchmakingRequest->ProcessRequest();
+
+		UGameLiftTutorialGameInstance* GLGI = Cast<UGameLiftTutorialGameInstance>(GetGameInstance());
+		MatchmakingTicketId = GLGI->MatchmakingTicketId;
+		AccessToken = GLGI->AccessToken;
+
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Got into Begin matchmaking");
+
+		//Reset variables here related to searching
+		SearchingForGame = false;
+
+		if (AccessToken.Len() > 0)
+		{
+			//Initiate Matchmaking request
+			TSharedRef<IHttpRequest> InitiateMatchmakingRequest = HttpModule->CreateRequest();
+			InitiateMatchmakingRequest->OnProcessRequestComplete().BindUObject(this, &UMatchmakingWidget::OnInitiateMatchmakingResponseReceived);
+			InitiateMatchmakingRequest->SetURL(LookForMatchUrl);
+			InitiateMatchmakingRequest->SetVerb("GET");
+			InitiateMatchmakingRequest->SetHeader("Authorization", AccessToken);
+			InitiateMatchmakingRequest->ProcessRequest();
+		}
 	}
+
+
+	
 }
 
 
@@ -78,7 +85,7 @@ void UMatchmakingWidget::OnInitiateMatchmakingResponseReceived(FHttpRequestPtr R
 
 			//AWS recommends to only poll every 10 seconds for optimization
 			GetWorld()->GetTimerManager().SetTimer(PollMatchmakingHandle, this, &UMatchmakingWidget::PollMatchmaking, 1.0f, false, 10.0f);
-			bSearchingForGame = true;
+			SearchingForGame = true;
 
 
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Initializing matchmaking request");
@@ -150,9 +157,9 @@ void UMatchmakingWidget::OnPollMatchmakingResponseReceived(FHttpRequestPtr Reque
 			}
 			else if (TicketStatus.Compare("MatchmakingSucceeded") == 0) {
 				// if check is to deal with a race condition involving the user pressing the cancel button
-				if (bSearchingForGame) {
+				if (SearchingForGame) {
 					//MatchmakingButton->SetIsEnabled(false);
-					bSearchingForGame = false;
+					SearchingForGame = false;
 
 					//TODO - Reset the widget and say we successfully found a match
 					//MatchmakingEventTextBlock->SetText(FText::FromString("Successfully found a match. Now connecting to the server"));
@@ -184,7 +191,7 @@ void UMatchmakingWidget::OnPollMatchmakingResponseReceived(FHttpRequestPtr Reque
 				}
 			}
 			else if (TicketStatus.Compare("MatchmakingTimedOut") == 0 || TicketStatus.Compare("MatchmakingCancelled") == 0 || TicketStatus.Compare("MatchmakingFailed") == 0) {
-				bSearchingForGame = false;
+				SearchingForGame = false;
 				// TODO - Set the status of the search in the matchmaking widget
 				/*UTextBlock* ButtonText = (UTextBlock*)MatchmakingButton->GetChildAt(0);
 				ButtonText->SetText(FText::FromString("Join Game"));
@@ -213,9 +220,9 @@ void UMatchmakingWidget::OnPollMatchmakingResponseReceived(FHttpRequestPtr Reque
 
 void UMatchmakingWidget::CancelMatchmaking()
 {
-	if (bSearchingForGame) {
+	if (SearchingForGame) {
 		GetWorld()->GetTimerManager().ClearTimer(PollMatchmakingHandle); // stop searching for a match
-		bSearchingForGame = false;
+		SearchingForGame = false;
 		UE_LOG(LogTemp, Warning, TEXT("Cancel matchmaking"));
 
 		if (MatchmakingTicketId.Len() > 0) {

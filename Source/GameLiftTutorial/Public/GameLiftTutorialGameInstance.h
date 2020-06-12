@@ -21,6 +21,8 @@ public:
 
 	virtual void Shutdown() override;
 
+	//want to set a timer that periodically calls the aws service endpoint in order to receive ping values
+	virtual void Init() override;
 	UPROPERTY()
 		FString AccessToken;
 
@@ -32,7 +34,13 @@ public:
 
 	UPROPERTY()
 		FTimerHandle RetrieveNewTokensHandle;
+	//ping
+	UPROPERTY()
+		FTimerHandle GetResponseTImeHandle;
 
+	//want to keep track of more then one response time results
+	TDoubleLinkedList<float> PlayerLatencies; //can use this as a queue to keep track of the most recent pings
+	
 	//Set by the MatchmakingWidget class
 	FString MatchmakingTicketId;
 
@@ -45,9 +53,16 @@ private:
 	UPROPERTY()
 		FString ApiUrl;
 
+	UPROPERTY()
+		FString RegionCode;
+
 	UFUNCTION()
 		void RetrieveNewTokens();
 
-	void OnRetrieveNewTokensResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	UFUNCTION()
+		void GetResponseTime();
+	
 
+	void OnRetrieveNewTokensResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnGetResponseTimeResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 };
