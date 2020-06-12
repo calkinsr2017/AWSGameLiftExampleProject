@@ -14,7 +14,7 @@ UGameLiftTutorialGameInstance::UGameLiftTutorialGameInstance()
 	UTextReaderComponent* TextReader = CreateDefaultSubobject<UTextReaderComponent>(TEXT("TextReaderComp"));
 
 	ApiUrl = TextReader->ReadFile("Urls/ApiUrl.txt");
-
+	RegionCode = TextReader->ReadFile("Urls/RegionCode.txt");
 	HttpModule = &FHttpModule::Get();
 
 }
@@ -35,6 +35,15 @@ void UGameLiftTutorialGameInstance::Shutdown()
 		
 	}
 }
+
+//need a timer function to get ping
+void UGameLiftTutorialGameInstance::Init()
+{
+	Super::Init();
+
+	GetWorld()->GetTimerManager().SetTimer(GetResponseTImeHandle, this, &UGameLiftTutorialGameInstance::GetResponseTime, 1.0f, true, 1.0f);
+}
+
 
 /* ============================================== COGNITO STUFF ================================================ */
 void UGameLiftTutorialGameInstance::SetCognitoTokens(FString NewAccessToken, FString NewIDToken, FString NewRefreshToken)
@@ -87,7 +96,7 @@ void UGameLiftTutorialGameInstance::OnRetrieveNewTokensResponseReceived(FHttpReq
 		TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
 		if(FJsonSerializer::Deserialize(Reader, JsonObject))
 		{
-			if(!JsonObject->HasField("error"))
+			if(JsonObject->HasField("accessToken") && JsonObject->HasField(("idToken")))
 			{
 				//Succesfully received tickets
 				SetCognitoTokens(JsonObject->GetStringField("accessToken"), JsonObject->GetStringField("idToken"), RefreshToken);
@@ -103,4 +112,25 @@ void UGameLiftTutorialGameInstance::OnRetrieveNewTokensResponseReceived(FHttpReq
 }
 /* ======================================================================================================================================= */
 
+
+void UGameLiftTutorialGameInstance::GetResponseTime()
+{
+	TSharedRef<IHttpRequest> GetResponseTimeReuqest = HttpModule->CreateRequest();
+	GetResponseTimeReuqest->OnProcessRequestComplete().BindUObject(this, &UGameLiftTutorialGameInstance::OnGetResponseTimeResponseReceived);
+	GetResponseTimeReuqest->SetURL("https://gamelift." + RegionCode + ".amazonaws.com");
+	GetResponseTimeReuqest->SetVerb("GET");
+	GetResponseTimeReuqest->ProcessRequest();
+}
+
+void UGameLiftTutorialGameInstance::OnGetResponseTimeResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (PlayerLatencies.Num() >= 4)
+	{
+		PlayerLatencies.RemoveNode(PlayerLatencies.GetHead());
+	}
+	float ResponseTime = Request->GetElapsedTime() * 1000;
+	//UE_LOG(LogTemp, Warning, TEXT("response time in milliseconds: %s"), *FString::SanitizeFloat(ResponseTime));
+
+	PlayerLatencies.AddTail(ResponseTime);
+}
 

@@ -22,6 +22,9 @@ public:
 	UMainMenuWidget(const FObjectInitializer& ObjectInitializer);
 	//The "BeginPlay" but for widget classes
 
+	//get latency from GameInstance class and calculate ping
+	UPROPERTY()
+		FTimerHandle SetAveragePlayerLatencyHandle;
 
 	UPROPERTY(BlueprintAssignable)
 		FOnLoginCompleteEvent OnLoginComplete;
@@ -44,9 +47,18 @@ private:
 	UPROPERTY()	
 		UWebBrowser* WebBrowser;
 
+	UPROPERTY()
+		float AveragePlayerLatency;
+
 	UFUNCTION()
 		void HandleLoginUrlChange();
 
+	UFUNCTION()
+		void SetAveragePlayerLatency();
 	
 	void OnExchangeCodeForTokensResponseRecieved(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
+	//Get player wins losses
+	void OnGetPlayerDataResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	
 };
