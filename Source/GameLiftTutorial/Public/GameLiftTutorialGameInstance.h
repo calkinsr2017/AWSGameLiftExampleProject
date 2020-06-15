@@ -40,9 +40,10 @@ public:
 
 	//want to keep track of more then one response time results
 	TDoubleLinkedList<float> PlayerLatencies; //can use this as a queue to keep track of the most recent pings
-	
+
+	UPROPERTY()
 	//Set by the MatchmakingWidget class
-	FString MatchmakingTicketId;
+		FString MatchmakingTicketId; //updated 1
 
 	UFUNCTION()
 		void SetCognitoTokens(FString NewAccessToken, FString NewIDToken, FString NewRefreshToken);

@@ -13,15 +13,27 @@
 #include "Json.h"
 #include "JsonUtilities.h"
 
+void UMatchmakingWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	GetWorld()->GetTimerManager().SetTimer(SetAveragePlayerLatencyHandle, this, &UMatchmakingWidget::SetAveragePlayerLatency, 1.0f, true, 1.0f);
+	
+
+
+}
+
+
+
 UMatchmakingWidget::UMatchmakingWidget(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
 	UTextReaderComponent* TextReader = CreateDefaultSubobject<UTextReaderComponent>(TEXT("TextReaderComp"));
 
 	FString ApiUrl = TextReader->ReadFile("Urls/ApiUrl.txt");
 
-	LookForMatchUrl = ApiUrl + "/startmatchmaking";
-	CancelMatchLookupUrl = ApiUrl + "/stopmatchmakingmike";
+	StartMatchLookupUrl = ApiUrl + "/startmatchmaking";
+	CancelMatchLookupUrl = ApiUrl + "/stopmatchmaking";
 	PollMatchmakingUrl = ApiUrl + "/pollmatchmaking";
-
+	RegionCode = TextReader->ReadFile("Urls/RegionCode.txt");
 	HttpModule = &FHttpModule::Get();
 	SearchingForGame = false;
 }
@@ -29,28 +41,43 @@ UMatchmakingWidget::UMatchmakingWidget(const FObjectInitializer& ObjectInitializ
 void UMatchmakingWidget::BeginMatchmaking(int32 InNumPlayers)
 {
 	//TODO - Get ID from google cognito and log into AWS service with player ID
-
-	if (!SearchingForGame)
+	//disable the button after clicked as to not cause two responses to be sent
+	UGameLiftTutorialGameInstance* GLGI = Cast<UGameLiftTutorialGameInstance>(GetGameInstance());
+	MatchmakingTicketId = GLGI->MatchmakingTicketId;
+	AccessToken = GLGI->AccessToken;
+	
+	if (!SearchingForGame) 
 	{
 
-		UGameLiftTutorialGameInstance* GLGI = Cast<UGameLiftTutorialGameInstance>(GetGameInstance());
-		MatchmakingTicketId = GLGI->MatchmakingTicketId;
-		AccessToken = GLGI->AccessToken;
-
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Got into Begin matchmaking");
-
 		//Reset variables here related to searching
-		SearchingForGame = false;
+		SearchingForGame = true;
+		
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Got into Begin matchmaking");
+		if (AccessToken.Len() > 0) {
+			TSharedRef<FJsonObject> LatencyMapObj = MakeShareable(new FJsonObject);
+			LatencyMapObj->SetNumberField(RegionCode, AveragePlayerLatency); //If more then one region, each region would have its own value
 
-		if (AccessToken.Len() > 0)
-		{
-			//Initiate Matchmaking request
-			TSharedRef<IHttpRequest> InitiateMatchmakingRequest = HttpModule->CreateRequest();
-			InitiateMatchmakingRequest->OnProcessRequestComplete().BindUObject(this, &UMatchmakingWidget::OnInitiateMatchmakingResponseReceived);
-			InitiateMatchmakingRequest->SetURL(LookForMatchUrl);
-			InitiateMatchmakingRequest->SetVerb("GET");
-			InitiateMatchmakingRequest->SetHeader("Authorization", AccessToken);
-			InitiateMatchmakingRequest->ProcessRequest();
+			TSharedPtr<FJsonObject> RequestObj = MakeShareable(new FJsonObject);
+			RequestObj->SetObjectField("latencyMap", LatencyMapObj);
+			
+			FString RequestBody;
+			TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&RequestBody);
+
+			if (FJsonSerializer::Serialize(RequestObj.ToSharedRef(), Writer)) {
+				// send a get request to google discovery document to retrieve endpoints
+				TSharedRef<IHttpRequest> StopMatchmakingRequest = HttpModule->CreateRequest();
+				StopMatchmakingRequest->OnProcessRequestComplete().BindUObject(this, &UMatchmakingWidget::OnStartMatchmakingResponseReceived);
+				StopMatchmakingRequest->SetURL(StartMatchLookupUrl);
+				StopMatchmakingRequest->SetVerb("POST");
+				StopMatchmakingRequest->SetHeader("Content-Type", "application/json");
+				StopMatchmakingRequest->SetHeader("Authorization", AccessToken);
+				StopMatchmakingRequest->SetContentAsString(RequestBody);
+				StopMatchmakingRequest->ProcessRequest();
+			} else {
+				UE_LOG(LogTemp, Warning, TEXT("at line 77"));
+			}
+		} else {
+			UE_LOG(LogTemp, Warning, TEXT("at line 80"));
 		}
 	}
 
@@ -59,7 +86,7 @@ void UMatchmakingWidget::BeginMatchmaking(int32 InNumPlayers)
 }
 
 
-void UMatchmakingWidget::OnInitiateMatchmakingResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
+void UMatchmakingWidget::OnStartMatchmakingResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
 	//UE_LOG(LogTemp, Warning, TEXT("Response from initiate matchmaking %s"), *(Response->GetContentAsString()));
 
 	if (bWasSuccessful) {
@@ -72,7 +99,7 @@ void UMatchmakingWidget::OnInitiateMatchmakingResponseReceived(FHttpRequestPtr R
 		//Deserialize the json data given Reader and the actual object to deserialize
 		if (FJsonSerializer::Deserialize(Reader, JsonObject))
 		{
-			UE_LOG(LogAWS, Log, TEXT("response: %s"), *Response->GetContentAsString());
+			UE_LOG(LogAWS, Log, TEXT("%s   response: %s"), __FUNCTIONW__, *Response->GetContentAsString());
 
 			MatchmakingTicketId = JsonObject->GetStringField("ticketId");
 
@@ -81,6 +108,9 @@ void UMatchmakingWidget::OnInitiateMatchmakingResponseReceived(FHttpRequestPtr R
 				UGameLiftTutorialGameInstance* GameLiftTutorialGameInstance = Cast<UGameLiftTutorialGameInstance>(GameInstance);
 				UE_LOG(LogAWS, Log, TEXT("Assigning matchmaking ticket %s"), *(MatchmakingTicketId));
 				GameLiftTutorialGameInstance->MatchmakingTicketId = MatchmakingTicketId;
+
+				GetWorld()->GetTimerManager().SetTimer(PollMatchmakingHandle, this, &UMatchmakingWidget::PollMatchmaking, 1.0f, true, 1.0f);
+				SearchingForGame = true;
 			}
 
 			//AWS recommends to only poll every 10 seconds for optimization
@@ -99,70 +129,59 @@ void UMatchmakingWidget::OnInitiateMatchmakingResponseReceived(FHttpRequestPtr R
 
 void UMatchmakingWidget::PollMatchmaking()
 {
-	GetWorld()->GetTimerManager().ClearTimer(PollMatchmakingHandle);
+	UGameInstance* GameInstance = GetGameInstance();
+	if (GameInstance != nullptr)
+	{
+		UGameLiftTutorialGameInstance* GLGI = Cast<UGameLiftTutorialGameInstance>(GameInstance);
+		AccessToken = GLGI->AccessToken;
+		MatchmakingTicketId = GLGI->MatchmakingTicketId;
+		
+	}
 
-	//Set current token status
-	FetchCurrentTokenStatus();
-
-	if (MatchmakingTicketId.Len() > 0.f) {
-
-		// poll for matchmaking status
+	if (AccessToken.Len() > 0 && MatchmakingTicketId.Len() > 0 && SearchingForGame)
+	{
 		TSharedPtr<FJsonObject> RequestObj = MakeShareable(new FJsonObject);
 		RequestObj->SetStringField("ticketId", MatchmakingTicketId);
 
 		FString RequestBody;
 		TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&RequestBody);
-
-		if (FJsonSerializer::Serialize(RequestObj.ToSharedRef(), Writer) && AccessToken.Len() > 0) {
-			//Initiate Matchmaking request
-			TSharedRef<IHttpRequest> PollMatchmakingStatus = HttpModule->CreateRequest();
-			PollMatchmakingStatus->OnProcessRequestComplete().BindUObject(this, &UMatchmakingWidget::OnPollMatchmakingResponseReceived);
-			PollMatchmakingStatus->SetURL(PollMatchmakingUrl);
-			PollMatchmakingStatus->SetVerb("GET");
-			PollMatchmakingStatus->SetHeader("Authorization", AccessToken);
-			PollMatchmakingStatus->ProcessRequest();
+		if (FJsonSerializer::Serialize(RequestObj.ToSharedRef(), Writer))
+		{
+			TSharedRef<IHttpRequest> PollMatchmakingRequest = HttpModule->CreateRequest();
+			PollMatchmakingRequest->OnProcessRequestComplete().BindUObject(this, &UMatchmakingWidget::OnPollMatchmakingResponseReceived);
+			PollMatchmakingRequest->SetURL(PollMatchmakingUrl);
+			PollMatchmakingRequest->SetVerb("POST");
+			PollMatchmakingRequest->SetHeader("Content-type", "application/json");
+			PollMatchmakingRequest->SetHeader("Authorization", AccessToken);
+			PollMatchmakingRequest->SetContentAsString(RequestBody);
+			PollMatchmakingRequest->ProcessRequest();
+			
 		}
-		else {
-			//Error with fetching the object, restart the polling
-			GetWorld()->GetTimerManager().SetTimer(PollMatchmakingHandle, this, &UMatchmakingWidget::PollMatchmaking, 1.0f, false, 10.0f);
-		}
-	}
-	else
-	{
-		//Continuously recurse call until we have found the match
-		GetWorld()->GetTimerManager().SetTimer(PollMatchmakingHandle, this, &UMatchmakingWidget::PollMatchmaking, 1.0f, false, 10.0f);
 	}
 }
 
-void UMatchmakingWidget::OnPollMatchmakingResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
+void UMatchmakingWidget::OnPollMatchmakingResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
 	//UE_LOG(LogTemp, Warning, TEXT("Response from initiate matchmaking %s"), *(Response->GetContentAsString()));
 
-	if (bWasSuccessful) {
+	if (bWasSuccessful && SearchingForGame) {
 		//Create a pointer to hold the json serialized data
 		TSharedPtr<FJsonObject> JsonObject;
-
 		//Create a reader pointer to read the json data
 		TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
 
 		//Deserialize the json data given Reader and the actual object to deserialize
 		if (FJsonSerializer::Deserialize(Reader, JsonObject))
 		{
-			TSharedPtr<FJsonObject> Ticket = JsonObject->GetObjectField("ticket");
-			FString TicketStatus = Ticket->GetObjectField("Type")->GetStringField("S");
+			if (JsonObject->HasField("ticket")) {
+				TSharedPtr<FJsonObject> Ticket = JsonObject->GetObjectField("ticket");
+				FString TicketType = Ticket->GetObjectField("Type")->GetStringField("S");
 
-			if (TicketStatus.Compare("MatchmakingSearching") == 0)
-			{
-				// continue to poll matchmaking
-				GetWorld()->GetTimerManager().SetTimer(PollMatchmakingHandle, this, &UMatchmakingWidget::PollMatchmaking, 1.0f, false, 10.0f);
-			}
-			else if (TicketStatus.Compare("MatchmakingSucceeded") == 0) {
-				// if check is to deal with a race condition involving the user pressing the cancel button
-				if (SearchingForGame) {
-					//MatchmakingButton->SetIsEnabled(false);
+				if (TicketType.Len() > 0)
+				{
+					// continue to poll matchmaking
+					GetWorld()->GetTimerManager().ClearTimer(PollMatchmakingHandle);
 					SearchingForGame = false;
-
-					//TODO - Reset the widget and say we successfully found a match
-					//MatchmakingEventTextBlock->SetText(FText::FromString("Successfully found a match. Now connecting to the server"));
 
 					UGameInstance* GameInstance = GetGameInstance();
 					if (GameInstance != nullptr) {
@@ -171,61 +190,50 @@ void UMatchmakingWidget::OnPollMatchmakingResponseReceived(FHttpRequestPtr Reque
 							GameLiftTutorialGameInstance->MatchmakingTicketId = FString("");
 						}
 					}
-					
-					// get the game session and player session details and connect to the server
-					TSharedPtr<FJsonObject> GameSessionInfo = Ticket->GetObjectField("GameSessionInfo")->GetObjectField("M");
-					FString IpAddress = GameSessionInfo->GetObjectField("IpAddress")->GetStringField("S");
-					FString Port = GameSessionInfo->GetObjectField("Port")->GetStringField("N");
-					FString PlayerSessionId = Ticket->GetObjectField("PlayerSessionId")->GetStringField("S");
-					FString PlayerId = Ticket->GetObjectField("PlayerId")->GetStringField("S");
-					FString LevelName = IpAddress + FString(":") + Port;
-					const FString& Options = FString("?") + FString("PlayerSessionId=") + PlayerSessionId + FString("?PlayerId=") + PlayerId;
 
-					//TODO - Handle invalid level travel
-					/*if (GEngine->OnTravelFailure().IsBoundToObject(this) == false)
+
+					if (TicketType.Compare("MatchmakingSucceeded") == 0) {
+						// if check is to deal with a race condition involving the user pressing the cancel button
+						//MatchmakingButton->SetIsEnabled(false
+						//TODO - Reset the widget and say we successfully found a match
+						//MatchmakingEventTextBlock->SetText(FText::FromString("Successfully found a match. Now connecting to the server"));
+
+						// get the game session and player session details and connect to the server
+						TSharedPtr<FJsonObject> GameSessionInfo = Ticket->GetObjectField("GameSessionInfo")->GetObjectField("M");
+						FString IpAddress = GameSessionInfo->GetObjectField("IpAddress")->GetStringField("S");
+						FString Port = GameSessionInfo->GetObjectField("Port")->GetStringField("N");
+
+						TArray<TSharedPtr<FJsonValue>> Players = Ticket->GetObjectField("Players")->GetArrayField("L");
+						TSharedPtr<FJsonObject> Player = Players[0]->AsObject()->GetObjectField("M");
+						FString PlayerSessionId = Player->GetObjectField("PlayerSessionId")->GetStringField("S");
+						FString PlayerId = Player->GetObjectField("PlayerId")->GetStringField("S");
+
+						FString LevelName = IpAddress + FString(":") + Port;
+						const FString& Options = FString("?") + FString("PlayerSessionId=") + PlayerSessionId + FString("?PlayerId=") + PlayerId;
+						UE_LOG(LogTemp, Warning, TEXT("Optens: %s"), *Options);
+						
+						//connect to the server here!!!!! might need to check to see if this fails. OnTravel function
+						UGameplayStatics::OpenLevel(GetWorld(), FName(*LevelName), false, Options);
+
+					} else
 					{
-						TravelFailureDelegateHandle = GEngine->OnTravelFailure().AddUObject(this, &UMenuWidget::OnTravelFailure);
-					}*/
-
-					UGameplayStatics::OpenLevel(GetWorld(), FName(*LevelName), false, Options);
-				}
-			}
-			else if (TicketStatus.Compare("MatchmakingTimedOut") == 0 || TicketStatus.Compare("MatchmakingCancelled") == 0 || TicketStatus.Compare("MatchmakingFailed") == 0) {
-				SearchingForGame = false;
-				// TODO - Set the status of the search in the matchmaking widget
-				/*UTextBlock* ButtonText = (UTextBlock*)MatchmakingButton->GetChildAt(0);
-				ButtonText->SetText(FText::FromString("Join Game"));
-				if (TicketStatus.Compare("MatchmakingCancelled") == 0) {
-					MatchmakingEventTextBlock->SetText(FText::FromString("Matchmaking request was cancelled. Please try again"));
-				}
-				else if (TicketStatus.Compare("MatchmakingTimedOut") == 0) {
-					MatchmakingEventTextBlock->SetText(FText::FromString("Matchmaking request timed out. Please try again"));
-				}
-				else if (TicketStatus.Compare("MatchmakingFailed") == 0) {
-					MatchmakingEventTextBlock->SetText(FText::FromString("Matchmaking request failed. Please try again"));
-				}*/
-				// stop calling the PollMatchmaking function
-				UGameInstance* GameInstance = GetGameInstance();
-				if (GameInstance != nullptr) {
-					UGameLiftTutorialGameInstance* GameLiftTutorialGameInstance = Cast<UGameLiftTutorialGameInstance>(GameInstance);
-					if (GameLiftTutorialGameInstance != nullptr) {
-						GameLiftTutorialGameInstance->MatchmakingTicketId = FString("");
+						UE_LOG(LogTemp, Warning, TEXT("issue in pollmatchmakingresponseRecieveddddddd over here!!"));
 					}
 				}
 			}
-		} 
+		}
 	}
 }
 
 
 void UMatchmakingWidget::CancelMatchmaking()
 {
-	if (SearchingForGame) {
+	if (SearchingForGame) { //when starting a match via button need to set this variable to true
 		GetWorld()->GetTimerManager().ClearTimer(PollMatchmakingHandle); // stop searching for a match
 		SearchingForGame = false;
 		UE_LOG(LogTemp, Warning, TEXT("Cancel matchmaking"));
 
-		if (MatchmakingTicketId.Len() > 0) {
+		if (MatchmakingTicketId.Len() > 0 && AccessToken.Len() > 0) {
 			// cancel matchmaking request
 			TSharedPtr<FJsonObject> RequestObj = MakeShareable(new FJsonObject);
 			RequestObj->SetStringField("ticketId", MatchmakingTicketId);
@@ -233,55 +241,41 @@ void UMatchmakingWidget::CancelMatchmaking()
 			FString RequestBody;
 			TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&RequestBody);
 
-			if (FJsonSerializer::Serialize(RequestObj.ToSharedRef(), Writer) && AccessToken.Len() > 0) {
+			if (FJsonSerializer::Serialize(RequestObj.ToSharedRef(), Writer)) {
 				// send a get request to google discovery document to retrieve endpoints
-				TSharedRef<IHttpRequest> CancelMatchLookupRequest = HttpModule->CreateRequest();
-				CancelMatchLookupRequest->OnProcessRequestComplete().BindUObject(this, &UMatchmakingWidget::OnCancelMatchmakingResponseReceived);
-				CancelMatchLookupRequest->SetURL(CancelMatchLookupUrl);
-				CancelMatchLookupRequest->SetVerb("POST");
-				CancelMatchLookupRequest->SetHeader("Content-Type", "application/json");
-				CancelMatchLookupRequest->SetHeader("Authorization", AccessToken);
-				CancelMatchLookupRequest->SetContentAsString(RequestBody);
-				CancelMatchLookupRequest->ProcessRequest();
-			}
-			else {
+				TSharedRef<IHttpRequest> StopMatchmakingRequest = HttpModule->CreateRequest();
+				StopMatchmakingRequest->OnProcessRequestComplete().BindUObject(this, &UMatchmakingWidget::OnStopMatchmakingResponseReceived);
+				StopMatchmakingRequest->SetURL(CancelMatchLookupUrl);
+				StopMatchmakingRequest->SetVerb("POST");
+				StopMatchmakingRequest->SetHeader("Content-Type", "application/json");
+				StopMatchmakingRequest->SetHeader("Authorization", AccessToken);
+				StopMatchmakingRequest->SetContentAsString(RequestBody);
+				StopMatchmakingRequest->ProcessRequest();
+			} else {
+				UE_LOG(LogTemp, Warning, TEXT("at line 247"));
+				//need to make sure the buttons are enabled and that 
 				/*UTextBlock* ButtonText = (UTextBlock*)MatchmakingButton->GetChildAt(0);
 				ButtonText->SetText(FText::FromString("Join Game"));
 				MatchmakingEventTextBlock->SetText(FText::FromString(""));
-
 				MatchmakingButton->SetIsEnabled(true);*/
 			}
+		} else {
+			UE_LOG(LogTemp, Warning, TEXT("at line 255"));
 		}
 	}
 }
 
-void UMatchmakingWidget::OnCancelMatchmakingResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
+void UMatchmakingWidget::OnStopMatchmakingResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
 	//UE_LOG(LogTemp, Warning, TEXT("Response from cancel matchmaking %s"), *(Response->GetContentAsString()));
 
-	if (bWasSuccessful) {
-		//Create a pointer to hold the json serialized data
-		TSharedPtr<FJsonObject> JsonObject;
-
-		//Create a reader pointer to read the json data
-		TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
-
-		//Deserialize the json data given Reader and the actual object to deserialize
-		if (FJsonSerializer::Deserialize(Reader, JsonObject))
-		{
-			bool CancellationSuccessful = JsonObject->GetBoolField("success");
-			if (CancellationSuccessful) {
-				UGameInstance* GameInstance = GetGameInstance();
-				if (GameInstance != nullptr) {
-					UGameLiftTutorialGameInstance* GameLiftTutorialGameInstance = Cast<UGameLiftTutorialGameInstance>(GameInstance);
-					if (GameLiftTutorialGameInstance != nullptr) {
-						GameLiftTutorialGameInstance->IdToken = FString("");
-					}
-					UE_LOG(LogAWS, Log, TEXT("%s: cancellation successful"), __FUNCTIONW__);
-				}
-			}
+	UGameInstance* GameInstance = GetGameInstance();
+	if (GameInstance != nullptr) {
+		UGameLiftTutorialGameInstance* GameLiftTutorialGameInstance = Cast<UGameLiftTutorialGameInstance>(GameInstance);
+		if (GameLiftTutorialGameInstance != nullptr) {
+			GameLiftTutorialGameInstance->MatchmakingTicketId = FString("");
 		}
+		UE_LOG(LogAWS, Log, TEXT("%s: cancellation successful"), __FUNCTIONW__);
 	}
-
 
 }
 
@@ -298,3 +292,28 @@ void UMatchmakingWidget::FetchCurrentTokenStatus()
 	}
 }
 
+//get player latency from get instance
+void UMatchmakingWidget::SetAveragePlayerLatency()
+{
+	UGameInstance* GameInstance = GetGameInstance();
+	if (GameInstance != nullptr)
+	{
+		UGameLiftTutorialGameInstance* GameLiftTutorialGameInstance = Cast<UGameLiftTutorialGameInstance>(GameInstance);
+		if (GameLiftTutorialGameInstance != nullptr)
+		{
+			float TotalPlayerLatency = 0.0f;
+			for (float i : GameLiftTutorialGameInstance->PlayerLatencies)
+			{
+				TotalPlayerLatency += i;
+			}
+
+			if (TotalPlayerLatency > 0)
+			{
+				AveragePlayerLatency = TotalPlayerLatency / GameLiftTutorialGameInstance->PlayerLatencies.Num();
+
+				//now add averagePlayerLatency to a text box or whatever else. We can round this value to int
+				FString PingString = "Ping:" + FString::FromInt(FMath::RoundToInt(AveragePlayerLatency)) + "ms";
+			}
+		}
+	}
+}

@@ -23,14 +23,17 @@ public:
 	void FetchCurrentTokenStatus();
 	
 protected:
-	void OnInitiateMatchmakingResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnStartMatchmakingResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful); //updated 2
 
 public:
 	UFUNCTION(BlueprintCallable)
 		void CancelMatchmaking();
 
+	UPROPERTY()
+		FTimerHandle SetAveragePlayerLatencyHandle;
+
 protected:
-	void OnCancelMatchmakingResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnStopMatchmakingResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful); //updated 3
 	
 private:
 	//Called every 10 seconds by the AWS server
@@ -38,6 +41,9 @@ private:
 
 	UPROPERTY()
 		bool SearchingForGame;
+
+protected:
+	virtual void NativeConstruct() override;
 	
 protected:
 	void OnPollMatchmakingResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
@@ -48,11 +54,20 @@ protected:
 	FString AccessToken;
 	FHttpModule* HttpModule;
 	
-	
-	FTimerHandle PollMatchmakingHandle;
+	UPROPERTY()
+		FTimerHandle PollMatchmakingHandle;
 
 private:
-	FString LookForMatchUrl;
+	FString StartMatchLookupUrl;
 	FString CancelMatchLookupUrl;
 	FString PollMatchmakingUrl;
+
+	UPROPERTY()
+		FString RegionCode;
+
+	UFUNCTION()
+		void SetAveragePlayerLatency();
+
+	UPROPERTY()
+		float AveragePlayerLatency;
 };

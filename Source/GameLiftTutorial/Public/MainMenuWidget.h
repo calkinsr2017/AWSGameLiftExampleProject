@@ -46,7 +46,6 @@ private:
 
 	UPROPERTY()	
 		UWebBrowser* WebBrowser;
-
 	UPROPERTY()
 		float AveragePlayerLatency;
 
@@ -60,5 +59,6 @@ private:
 
 	//Get player wins losses
 	void OnGetPlayerDataResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
 	
 };
