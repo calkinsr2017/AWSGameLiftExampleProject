@@ -19,10 +19,14 @@ void UMatchmakingWidget::NativeConstruct()
 
 	GetWorld()->GetTimerManager().SetTimer(SetAveragePlayerLatencyHandle, this, &UMatchmakingWidget::SetAveragePlayerLatency, 1.0f, true, 1.0f);
 	
-
-
 }
 
+void UMatchmakingWidget::NativeDestruct()
+{
+	GetWorld()->GetTimerManager().ClearTimer(PollMatchmakingHandle);
+	GetWorld()->GetTimerManager().ClearTimer(SetAveragePlayerLatencyHandle);
+	Super::NativeDestruct();
+}
 
 
 UMatchmakingWidget::UMatchmakingWidget(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
@@ -114,8 +118,8 @@ void UMatchmakingWidget::OnStartMatchmakingResponseReceived(FHttpRequestPtr Requ
 			}
 
 			//AWS recommends to only poll every 10 seconds for optimization
-			GetWorld()->GetTimerManager().SetTimer(PollMatchmakingHandle, this, &UMatchmakingWidget::PollMatchmaking, 1.0f, false, 10.0f);
-			SearchingForGame = true;
+			//GetWorld()->GetTimerManager().SetTimer(PollMatchmakingHandle, this, &UMatchmakingWidget::PollMatchmaking, 1.0f, false, 10.0f);
+			//SearchingForGame = true;
 
 
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Initializing matchmaking request");
@@ -129,6 +133,7 @@ void UMatchmakingWidget::OnStartMatchmakingResponseReceived(FHttpRequestPtr Requ
 
 void UMatchmakingWidget::PollMatchmaking()
 {
+
 	UGameInstance* GameInstance = GetGameInstance();
 	if (GameInstance != nullptr)
 	{
@@ -140,6 +145,8 @@ void UMatchmakingWidget::PollMatchmaking()
 
 	if (AccessToken.Len() > 0 && MatchmakingTicketId.Len() > 0 && SearchingForGame)
 	{
+		UE_LOG(LogAWS, Log, TEXT("%s: in poll matchmaking"), __FUNCTIONW__);
+		
 		TSharedPtr<FJsonObject> RequestObj = MakeShareable(new FJsonObject);
 		RequestObj->SetStringField("ticketId", MatchmakingTicketId);
 
@@ -162,7 +169,7 @@ void UMatchmakingWidget::PollMatchmaking()
 
 void UMatchmakingWidget::OnPollMatchmakingResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	//UE_LOG(LogTemp, Warning, TEXT("Response from initiate matchmaking %s"), *(Response->GetContentAsString()));
+	UE_LOG(LogAWS, Log, TEXT("%s: Response from initiate matchmaking %s"), __FUNCTIONW__, *(Response->GetContentAsString()));
 
 	if (bWasSuccessful && SearchingForGame) {
 		//Create a pointer to hold the json serialized data
@@ -210,14 +217,14 @@ void UMatchmakingWidget::OnPollMatchmakingResponseReceived(FHttpRequestPtr Reque
 
 						FString LevelName = IpAddress + FString(":") + Port;
 						const FString& Options = FString("?") + FString("PlayerSessionId=") + PlayerSessionId + FString("?PlayerId=") + PlayerId;
-						UE_LOG(LogTemp, Warning, TEXT("Optens: %s"), *Options);
+						UE_LOG(LogAWS, Warning, TEXT("Options: %s"), *Options);
 						
 						//connect to the server here!!!!! might need to check to see if this fails. OnTravel function
 						UGameplayStatics::OpenLevel(GetWorld(), FName(*LevelName), false, Options);
 
 					} else
 					{
-						UE_LOG(LogTemp, Warning, TEXT("issue in pollmatchmakingresponseRecieveddddddd over here!!"));
+						UE_LOG(LogTemp, Warning, TEXT("%s . Please Try again"), *TicketType);
 					}
 				}
 			}
