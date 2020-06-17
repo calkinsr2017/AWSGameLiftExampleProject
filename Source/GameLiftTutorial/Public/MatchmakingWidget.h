@@ -44,6 +44,7 @@ private:
 
 protected:
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 	
 protected:
 	void OnPollMatchmakingResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);

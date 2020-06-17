@@ -38,26 +38,55 @@ void UMainMenuWidget::NativeConstruct()
 	WebBrowser = (UWebBrowser*)GetWidgetFromName(TEXT("WebBrowser_Login"));
 
 	GetWorld()->GetTimerManager().SetTimer(SetAveragePlayerLatencyHandle, this, &UMainMenuWidget::SetAveragePlayerLatency, 1.0f, true, 1.0f);
-	IWebBrowserSingleton* WebBrowserSingleton = IWebBrowserModule::Get().GetSingleton();
-	
-	if (WebBrowserSingleton != nullptr)
+
+	//Checking to see if we already have an access token so we dont have to log in again... might need to do this in Matchmaking widget instead
+	FString AccessToken;
+	UGameInstance* GameInstance = GetGameInstance();
+	UGameLiftTutorialGameInstance* GLGI = Cast<UGameLiftTutorialGameInstance>(GameInstance);
+	AccessToken = GLGI->AccessToken;
+
+	if (AccessToken.Len() > 0)
 	{
-		TOptional<FString> DefaultContext;
-		TSharedPtr<IWebBrowserCookieManager> CookieManager = WebBrowserSingleton->GetCookieManager(DefaultContext);
-		if (CookieManager.IsValid())
+		TSharedRef<IHttpRequest> GetPlayerDataRequest = HttpModule->CreateRequest();
+		GetPlayerDataRequest->OnProcessRequestComplete().BindUObject(this, &UMainMenuWidget::OnGetPlayerDataResponseReceived);
+		GetPlayerDataRequest->SetURL(ApiUrl + "/getplayerdata");
+		GetPlayerDataRequest->SetVerb("GET");
+		GetPlayerDataRequest->SetHeader("Authorization", AccessToken);
+		GetPlayerDataRequest->SetHeader("Content-Type", "application/json");
+		GetPlayerDataRequest->ProcessRequest();
+	} else
+	{
+
+		IWebBrowserSingleton* WebBrowserSingleton = IWebBrowserModule::Get().GetSingleton();
+
+		if (WebBrowserSingleton != nullptr)
 		{
-			CookieManager->DeleteCookies();
+			TOptional<FString> DefaultContext;
+			TSharedPtr<IWebBrowserCookieManager> CookieManager = WebBrowserSingleton->GetCookieManager(DefaultContext);
+			if (CookieManager.IsValid())
+			{
+				CookieManager->DeleteCookies();
+			}
 		}
+
+		WebBrowser->LoadURL(LoginUrl);
+
+		FScriptDelegate LoginDelegate;
+		LoginDelegate.BindUFunction(this, "HandleLoginUrlChange");
+		WebBrowser->OnUrlChanged.Add(LoginDelegate);
 	}
 
-	WebBrowser->LoadURL(LoginUrl);
 
-	FScriptDelegate LoginDelegate;
-	LoginDelegate.BindUFunction(this, "HandleLoginUrlChange");
-	WebBrowser->OnUrlChanged.Add(LoginDelegate);
 	
 	
 }
+
+void UMainMenuWidget::NativeDestruct()
+{
+	GetWorld()->GetTimerManager().ClearTimer(SetAveragePlayerLatencyHandle);
+	Super::NativeDestruct();
+}
+
 
 void UMainMenuWidget::HandleLoginUrlChange()
 {

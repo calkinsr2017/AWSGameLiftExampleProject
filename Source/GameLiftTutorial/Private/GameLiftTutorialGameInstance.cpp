@@ -22,10 +22,31 @@ UGameLiftTutorialGameInstance::UGameLiftTutorialGameInstance()
 
 void UGameLiftTutorialGameInstance::Shutdown()
 {
-	Super::Shutdown();
+	GetWorld()->GetTimerManager().ClearTimer(RetrieveNewTokensHandle);
+	GetWorld()->GetTimerManager().ClearTimer(GetResponseTImeHandle);
+	
 
 	if (AccessToken.Len() > 0)
 	{
+		if(MatchmakingTicketId.Len()>0)
+		{
+			TSharedPtr<FJsonObject> RequestObj = MakeShareable(new FJsonObject);
+			RequestObj->SetStringField("ticketId", MatchmakingTicketId);
+
+			FString RequestBody;
+			TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&RequestBody);
+			if(FJsonSerializer::Serialize(RequestObj.ToSharedRef(), Writer))
+			{
+				TSharedRef<IHttpRequest> StopMatchmakingRequest = HttpModule->CreateRequest();
+				StopMatchmakingRequest->SetURL(ApiUrl + "/stopmatchmaking");
+				StopMatchmakingRequest->SetVerb("POST");
+				StopMatchmakingRequest->SetHeader("Content-Type", "application/json");
+				StopMatchmakingRequest->SetHeader("Authorization", AccessToken);
+				StopMatchmakingRequest->SetContentAsString(RequestBody);
+				StopMatchmakingRequest->ProcessRequest();
+
+			}
+		}
 		TSharedRef<IHttpRequest> InvalideTokensRequest = HttpModule->CreateRequest();
 		InvalideTokensRequest->SetURL(ApiUrl + "/invalidatetokens");
 		InvalideTokensRequest->SetVerb("GET");
@@ -34,6 +55,8 @@ void UGameLiftTutorialGameInstance::Shutdown()
 		InvalideTokensRequest->ProcessRequest();
 		
 	}
+
+	Super::Shutdown();
 }
 
 //need a timer function to get ping
