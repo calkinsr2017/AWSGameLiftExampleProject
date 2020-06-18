@@ -50,9 +50,6 @@ private:
 	UPROPERTY()
 		float AveragePlayerLatency;
 
-	FString code;
-	FString org_scoped_id;
-
 	UFUNCTION()
 		void HandleLoginUrlChange();
 

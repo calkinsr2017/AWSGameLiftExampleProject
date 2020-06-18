@@ -5,3 +5,4 @@
 #include "CoreMinimal.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogAWS, Log, All)
+DECLARE_LOG_CATEGORY_EXTERN(LogOculus, Log, All);
