@@ -2,7 +2,6 @@
 
 
 #include "MainMenuWidget.h"
-#include "GameLiftTutorial.h"
 #include "TextReaderComponent.h"
 #include "WebBrowser.h"
 #include "WebBrowserModule.h"
@@ -14,7 +13,6 @@
 #include "TimerManager.h"
 #include "Engine/World.h"
 #include "Misc/Base64.h"
-
 
 //This tutorial assumes we always have valid access tokens
 
@@ -77,7 +75,6 @@ void UMainMenuWidget::NativeConstruct()
 		FScriptDelegate LoginDelegate;
 		LoginDelegate.BindUFunction(this, "HandleLoginUrlChange");
 		WebBrowser->OnUrlChanged.Add(LoginDelegate);
-
 	}
 
 
@@ -95,16 +92,12 @@ void UMainMenuWidget::NativeDestruct()
 void UMainMenuWidget::HandleLoginUrlChange()
 {
 	FString BrowserUrl = WebBrowser->GetUrl();
-	FString LoginUrl2;
+	FString LoginUrl;
 	FString base64Json;
 	FString convertedJson;
-
-	UE_LOG(LogOculus, Log, TEXT("%s   current url: %s"), __FUNCTIONW__, *BrowserUrl);
-
 	
-	if (BrowserUrl.Split("#", &LoginUrl2, &base64Json))
+	if (BrowserUrl.Split("#", &LoginUrl, &base64Json))
 	{
-		UE_LOG(LogOculus, Log, TEXT("%s   Coded Json: %s"), __FUNCTIONW__, *base64Json);
 		
 		//decode base64 to JSon
 		if(FBase64::Decode(base64Json, convertedJson))
@@ -114,13 +107,8 @@ void UMainMenuWidget::HandleLoginUrlChange()
 
 			if (FJsonSerializer::Deserialize(Reader, JsonObject))
 			{
-				UE_LOG(LogOculus, Log, TEXT("%s Json: %s"), __FUNCTIONW__, *convertedJson);
-
-	
 				code = JsonObject->GetStringField("code");
-				org_scoped_id = JsonObject->GetStringField("org_scoped_id");
-				UE_LOG(LogOculus, Log, TEXT("%s   Coded: %s  Org Scope Id: %s"), __FUNCTIONW__, *code, *org_scoped_id);
-
+				org_scoped_id = JsonObject->GetStringField("org-scoped_id");
 			}
 			
 			
