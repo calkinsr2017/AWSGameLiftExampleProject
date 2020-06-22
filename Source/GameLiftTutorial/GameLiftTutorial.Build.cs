@@ -11,7 +11,8 @@ public class GameLiftTutorial : ModuleRules
 		PublicDependencyModuleNames.AddRange(new string[]
         {
             "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "GameLiftServerSDK", "UMG", "SlateCore", "Http", "Json", "JsonUtilities", "WebBrowserWidget",
-			"LibOVRPlatform" //for access to C SDK functionality in code
+			"LibOVRPlatform", //for access to C SDK functionality in code
+            "OnlineSubsystem"
         });
 
         PrivateDependencyModuleNames.AddRange(new string[]

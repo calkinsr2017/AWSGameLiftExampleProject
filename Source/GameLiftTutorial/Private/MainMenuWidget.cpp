@@ -15,6 +15,10 @@
 #include "Engine/World.h"
 #include "Misc/Base64.h"
 
+//For Subsystem related functions
+#include "OnlineSubsystem.h"
+#include "Interfaces/OnlineIdentityInterface.h"
+
 
 //This tutorial assumes we always have valid access tokens
 
@@ -159,6 +163,10 @@ void UMainMenuWidget::OnGetOculusResponseRecieved(FHttpRequestPtr Request, FHttp
 				GetPlayerDataRequest->SetVerb("GET");
 				GetPlayerDataRequest->ProcessRequest();
 
+				
+
+				
+				
 				//Call to switch widgets once used
 				OnLoginComplete.Broadcast();
 
@@ -168,6 +176,16 @@ void UMainMenuWidget::OnGetOculusResponseRecieved(FHttpRequestPtr Request, FHttp
 		}
 	}
 }
+
+void UMainMenuWidget::AttemptOculusLogin()
+{
+	uint8 LocalId = GetOwningLocalPlayer()->GetControllerId();
+	IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get();
+	IOnlineIdentityPtr Identity = OnlineSubsystem->GetIdentityInterface();
+
+	Identity->AutoLogin(LocalId);
+}
+
 
 void UMainMenuWidget::OnGetOculusPlayerDataResponseRecieved(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {

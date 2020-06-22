@@ -29,10 +29,6 @@ public:
 	UPROPERTY(BlueprintAssignable)
 		FOnLoginCompleteEvent OnLoginComplete;
 
-	UFUNCTION(BlueprintCallable)
-		void AttemptOculusLogin();
-
-	
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
@@ -64,7 +60,6 @@ private:
 	UFUNCTION()
 		void HandleLoginUrlChange();
 
-
 	UFUNCTION()
 		void SetAveragePlayerLatency();
 	
@@ -73,7 +68,6 @@ private:
 	//Get player wins losses
 	void OnGetPlayerDataResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void OnGetOculusResponseRecieved(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-
 	void OnGetOculusPlayerDataResponseRecieved(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	
