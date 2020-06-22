@@ -212,7 +212,7 @@ void UMainMenuWidget::OnExchangeCodeForTokensResponseRecieved(FHttpRequestPtr Re
 					{
 						FString AccessToken = JsonObject->GetStringField("access_token");
 						FString IdToken = JsonObject->GetStringField("id_token");
-						FString RefreshToken = JsonObject->GetStringField("refresh_token");
+						RefreshToken = JsonObject->GetStringField("refresh_token");
 						//Pass the tokens for use with the AWS console
 						GameLiftTutorialGameInstance->SetCognitoTokens(AccessToken, IdToken, RefreshToken);
 
