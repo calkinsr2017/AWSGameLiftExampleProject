@@ -8,6 +8,16 @@ public class GameLiftTutorial : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "GameLiftServerSDK", "UMG", "SlateCore", "Http", "Json", "JsonUtilities", "WebBrowserWidget" });
+		PublicDependencyModuleNames.AddRange(new string[]
+        {
+            "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "GameLiftServerSDK", "UMG", "SlateCore", "Http", "Json", "JsonUtilities", "WebBrowserWidget",
+			"LibOVRPlatform" //for access to C SDK functionality in code
+        });
+
+        PrivateDependencyModuleNames.AddRange(new string[]
+        {
+            "OnlineSubsystem", //Access to Interfaces like Friends, Sessions, etc.
+            "OnlineSubsystemOculus", //Access to Oculus specific code
+        });
 	}
 }
