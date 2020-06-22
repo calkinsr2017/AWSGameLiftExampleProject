@@ -183,9 +183,11 @@ void UMainMenuWidget::OnGetOculusPlayerDataResponseRecieved(FHttpRequestPtr Requ
 
 				FString id = JsonObject->GetStringField("id");
 				FString alias = JsonObject->GetStringField("alias");
-				
-				UE_LOG(LogOculus, Log, TEXT("%s   id: %s  alias: %s"), __FUNCTIONW__, *id, *alias);
-				//maybe try and add this info to a dynamodb table 
+				//Pass the tokens for use with the AWS console
+				UE_LOG(LogOculus, Log, TEXT("%s   oauth token: %s  RefreshToken: %s"), __FUNCTIONW__, *id, *alias);
+
+
+
 			}
 		}
 	}

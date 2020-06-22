@@ -32,6 +32,10 @@
 				"Linux",
 				"Mac"
 			]
+		},
+		{
+			"Name": "OnlineSubsystemOculus",
+			"Enabled": true
 		}
 	]
 }

@@ -52,6 +52,10 @@ private:
 
 	FString code;
 	FString org_scoped_id;
+	FString OculusAppId;
+	FString OculusSecretId;
+	FString OauthToken;
+	FString RefreshToken;
 
 	UFUNCTION()
 		void HandleLoginUrlChange();
@@ -63,6 +67,8 @@ private:
 
 	//Get player wins losses
 	void OnGetPlayerDataResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnGetOculusResponseRecieved(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnGetOculusPlayerDataResponseRecieved(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	
 };
