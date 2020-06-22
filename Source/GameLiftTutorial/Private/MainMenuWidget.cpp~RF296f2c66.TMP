@@ -147,16 +147,17 @@ void UMainMenuWidget::OnGetOculusResponseRecieved(FHttpRequestPtr Request, FHttp
 			{
 
 
-				OauthToken = JsonObject->GetStringField("oauth_token");
-				RefreshToken = JsonObject->GetStringField("refresh_code");
+				FString OauthToken = JsonObject->GetStringField("oauth_token");
+				FString RefreshToken = JsonObject->GetStringField("refresh_code");
 				//Pass the tokens for use with the AWS console
 				UE_LOG(LogOculus, Log, TEXT("%s   oauth token: %s  RefreshToken: %s"), __FUNCTIONW__, *OauthToken, *RefreshToken);
 
 
 				TSharedRef<IHttpRequest> GetPlayerDataRequest = HttpModule->CreateRequest();
 				GetPlayerDataRequest->OnProcessRequestComplete().BindUObject(this, &UMainMenuWidget::OnGetOculusPlayerDataResponseRecieved);
-				GetPlayerDataRequest->SetURL("https://graph.oculus.com/me?access_token=" + OauthToken + "&fields=id,alias");
+				GetPlayerDataRequest->SetURL();
 				GetPlayerDataRequest->SetVerb("GET");
+				
 				GetPlayerDataRequest->ProcessRequest();
 
 				//Call to switch widgets once used
@@ -171,24 +172,7 @@ void UMainMenuWidget::OnGetOculusResponseRecieved(FHttpRequestPtr Request, FHttp
 
 void UMainMenuWidget::OnGetOculusPlayerDataResponseRecieved(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	if (bWasSuccessful)
-	{
-		TSharedPtr<FJsonObject> JsonObject;
-		TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
-		if (FJsonSerializer::Deserialize(Reader, JsonObject))
-		{
-			if (JsonObject->HasField(("id")) && JsonObject->HasField(("alias")))
-			{
-
-
-				FString id = JsonObject->GetStringField("id");
-				FString alias = JsonObject->GetStringField("alias");
-				
-				UE_LOG(LogOculus, Log, TEXT("%s   id: %s  alias: %s"), __FUNCTIONW__, *id, *alias);
-				//maybe try and add this info to a dynamodb table 
-			}
-		}
-	}
+	
 }
 
 
