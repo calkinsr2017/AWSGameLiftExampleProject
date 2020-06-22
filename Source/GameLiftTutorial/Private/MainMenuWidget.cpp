@@ -12,6 +12,8 @@
 #include "GameLiftTutorialGameInstance.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/TextBlock.h"
 
 //This tutorial assumes we always have valid access tokens
 
@@ -36,7 +38,10 @@ void UMainMenuWidget::NativeConstruct()
 
 	//Widgets
 	WebBrowser = (UWebBrowser*)GetWidgetFromName(TEXT("WebBrowser_Login"));
+	winsTextBlock = (UTextBlock*)GetWidgetFromName(TEXT("Wins"));
+	LossesTextBlock = (UTextBlock*)GetWidgetFromName(TEXT("Losses"));
 
+	
 	GetWorld()->GetTimerManager().SetTimer(SetAveragePlayerLatencyHandle, this, &UMainMenuWidget::SetAveragePlayerLatency, 1.0f, true, 1.0f);
 
 	//Checking to see if we already have an access token so we dont have to log in again... might need to do this in Matchmaking widget instead
@@ -188,7 +193,10 @@ void UMainMenuWidget::OnGetPlayerDataResponseReceived(FHttpRequestPtr Request, F
 				FString Wins = WinsObject->GetStringField("N");
 				FString Losses = LossesObject->GetStringField("N");
 
-				//Update textboxes here
+				winsTextBlock->SetText(FText::FromString("Wins: " + Wins));
+				LossesTextBlock->SetText(FText::FromString("Losses: " + Losses));
+				
+				
 			}
 		}
 	}

@@ -10,6 +10,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLoginCompleteEvent);
 class UWebBrowser;
+class UTextBlock;
 /**
  * 
  */
@@ -47,6 +48,13 @@ private:
 
 	UPROPERTY()	
 		UWebBrowser* WebBrowser;
+
+	UPROPERTY()
+		UTextBlock* winsTextBlock;
+
+	UPROPERTY()
+		UTextBlock* LossesTextBlock;
+
 	UPROPERTY()
 		float AveragePlayerLatency;
 
