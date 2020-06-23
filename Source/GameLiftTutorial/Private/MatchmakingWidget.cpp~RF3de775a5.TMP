@@ -209,6 +209,7 @@ void UMatchmakingWidget::OnPollMatchmakingResponseReceived(FHttpRequestPtr Reque
 
 					if (TicketType.Compare("MatchmakingSucceeded") == 0) {
 						// if check is to deal with a race condition involving the user pressing the cancel button
+						//MatchmakingButton->SetIsEnabled(false
 						//TODO - Reset the widget and say we successfully found a match
 						MatchmakingStatusTextBlock->SetText(FText::FromString("Successfully found a match. Now connecting to the server"));
 
@@ -232,7 +233,7 @@ void UMatchmakingWidget::OnPollMatchmakingResponseReceived(FHttpRequestPtr Reque
 					}
 					else
 					{
-						MatchmakingStatusTextBlock->SetText(FText::FromString("Something went wrong, please try again"));
+						UE_LOG(LogTemp, Warning, TEXT("%s . Please Try again"), *TicketType);
 					}
 				}
 			}
