@@ -16,11 +16,6 @@ void UMatchmakingWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-
-	winsTextBlock = (UTextBlock*)GetWidgetFromName(TEXT("Wins"));
-	LossesTextBlock = (UTextBlock*)GetWidgetFromName(TEXT("Losses"));
-	MatchmakingStatusTextBlock = (UTextBlock*)GetWidgetFromName(TEXT("MatchmakingStatus"));
-	
 	GetWorld()->GetTimerManager().SetTimer(SetAveragePlayerLatencyHandle, this, &UMatchmakingWidget::SetAveragePlayerLatency, 1.0f, true, 1.0f);
 
 }
@@ -33,7 +28,8 @@ void UMatchmakingWidget::NativeDestruct()
 }
 
 
-UMatchmakingWidget::UMatchmakingWidget(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
+UMatchmakingWidget::UMatchmakingWidget(const FObjectInitializer& ObjectInitializer) {
+	Super(ObjectInitializer);
 	UTextReaderComponent* TextReader = CreateDefaultSubobject<UTextReaderComponent>(TEXT("TextReaderComp"));
 
 	FString ApiUrl = TextReader->ReadFile("Urls/ApiUrl.txt");
@@ -41,7 +37,6 @@ UMatchmakingWidget::UMatchmakingWidget(const FObjectInitializer& ObjectInitializ
 	StartMatchLookupUrl = ApiUrl + "/startmatchmaking";
 	CancelMatchLookupUrl = ApiUrl + "/stopmatchmaking";
 	PollMatchmakingUrl = ApiUrl + "/pollmatchmaking";
-	GetPlayerDataUrl = ApiUrl + "/getplayerdata";
 	RegionCode = TextReader->ReadFile("Urls/RegionCode.txt");
 	HttpModule = &FHttpModule::Get();
 	SearchingForGame = false;
@@ -131,7 +126,6 @@ void UMatchmakingWidget::OnStartMatchmakingResponseReceived(FHttpRequestPtr Requ
 
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Initializing matchmaking request");
 
-			
 
 			//TODO - Handle currently looking for a match with widget stuff
 		}
@@ -209,8 +203,9 @@ void UMatchmakingWidget::OnPollMatchmakingResponseReceived(FHttpRequestPtr Reque
 
 					if (TicketType.Compare("MatchmakingSucceeded") == 0) {
 						// if check is to deal with a race condition involving the user pressing the cancel button
+						//MatchmakingButton->SetIsEnabled(false
 						//TODO - Reset the widget and say we successfully found a match
-						MatchmakingStatusTextBlock->SetText(FText::FromString("Successfully found a match. Now connecting to the server"));
+						//MatchmakingEventTextBlock->SetText(FText::FromString("Successfully found a match. Now connecting to the server"));
 
 						// get the game session and player session details and connect to the server
 						TSharedPtr<FJsonObject> GameSessionInfo = Ticket->GetObjectField("GameSessionInfo")->GetObjectField("M");
@@ -232,7 +227,7 @@ void UMatchmakingWidget::OnPollMatchmakingResponseReceived(FHttpRequestPtr Reque
 					}
 					else
 					{
-						MatchmakingStatusTextBlock->SetText(FText::FromString("Something went wrong, please try again"));
+						UE_LOG(LogTemp, Warning, TEXT("%s . Please Try again"), *TicketType);
 					}
 				}
 			}
@@ -330,49 +325,6 @@ void UMatchmakingWidget::SetAveragePlayerLatency()
 
 				//now add averagePlayerLatency to a text box or whatever else. We can round this value to int
 				FString PingString = "Ping:" + FString::FromInt(FMath::RoundToInt(AveragePlayerLatency)) + "ms";
-			}
-		}
-	}
-}
-
-
-
-void UMatchmakingWidget::getPlayerData()
-{
-
-	//Get player win loss data if we would like to add this functionality to our widgets
-	TSharedRef<IHttpRequest> GetPlayerDataRequest = HttpModule->CreateRequest();
-	GetPlayerDataRequest->OnProcessRequestComplete().BindUObject(this, &UMatchmakingWidget::OnGetPlayerDataResponseReceived);
-	GetPlayerDataRequest->SetURL(GetPlayerDataUrl);
-	GetPlayerDataRequest->SetVerb("GET");
-	GetPlayerDataRequest->SetHeader("Authorization", AccessToken);
-	GetPlayerDataRequest->SetHeader("Content-Type", "application/json");
-	GetPlayerDataRequest->ProcessRequest();
-}
-
-
-void UMatchmakingWidget::OnGetPlayerDataResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-{
-	if (bWasSuccessful)
-	{
-		TSharedPtr<FJsonObject> JsonObject;
-		TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
-		if (FJsonSerializer::Deserialize(Reader, JsonObject))
-		{
-			if (JsonObject->HasField("playerData"))
-			{
-				TSharedPtr<FJsonObject> PlayerData = JsonObject->GetObjectField("playerData");
-				TSharedPtr<FJsonObject> WinsObject = PlayerData->GetObjectField("Wins");
-				TSharedPtr<FJsonObject> LossesObject = PlayerData->GetObjectField("Losses");
-
-				FString Wins = WinsObject->GetStringField("N");
-				FString Losses = LossesObject->GetStringField("N");
-
-
-				
-				winsTextBlock->SetText(FText::FromString("Wins: " + Wins));
-				LossesTextBlock->SetText(FText::FromString("Losses: " + Losses));
-
 			}
 		}
 	}

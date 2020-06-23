@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "HttpModule.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/TextBlock.h"
+#include "Blueprint/UserWidget.h"
+
 #include "MatchmakingWidget.generated.h"
 
 /**
@@ -29,6 +32,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void CancelMatchmaking();
 
+	UFUNCTION(BlueprintCallable)
+		void getPlayerData();
+
 	UPROPERTY()
 		FTimerHandle SetAveragePlayerLatencyHandle;
 
@@ -42,12 +48,23 @@ private:
 	UPROPERTY()
 		bool SearchingForGame;
 
+	UPROPERTY()
+		UTextBlock* winsTextBlock;
+
+	UPROPERTY()
+		UTextBlock* LossesTextBlock;
+
+	UPROPERTY()
+		UTextBlock* MatchmakingStatusTextBlock;
+
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
+
 	
 protected:
 	void OnPollMatchmakingResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnGetPlayerDataResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	/* ================================== VARIABLES ========================== */
 protected:
@@ -62,7 +79,8 @@ private:
 	FString StartMatchLookupUrl;
 	FString CancelMatchLookupUrl;
 	FString PollMatchmakingUrl;
-
+	FString GetPlayerDataUrl;
+	
 	UPROPERTY()
 		FString RegionCode;
 
@@ -71,4 +89,6 @@ private:
 
 	UPROPERTY()
 		float AveragePlayerLatency;
+
+	
 };

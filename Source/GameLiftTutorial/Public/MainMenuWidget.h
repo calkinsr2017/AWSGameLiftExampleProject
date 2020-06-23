@@ -49,11 +49,13 @@ private:
 	UPROPERTY()	
 		UWebBrowser* WebBrowser;
 
+
 	UPROPERTY()
 		UTextBlock* winsTextBlock;
 
 	UPROPERTY()
 		UTextBlock* LossesTextBlock;
+	
 
 	UPROPERTY()
 		float AveragePlayerLatency;

@@ -186,12 +186,13 @@ void UMainMenuWidget::OnGetPlayerDataResponseReceived(FHttpRequestPtr Request, F
 		{
 			if (JsonObject->HasField("playerData"))
 			{
-				TSharedPtr<FJsonObject> PlayerData = JsonObject->GetObjectField("playerData");
+				TSharedPtr<FJsonObject> PlayerData = JsonObject->GetObjectField("PlayerData");
 				TSharedPtr<FJsonObject> WinsObject = PlayerData->GetObjectField("Wins");
 				TSharedPtr<FJsonObject> LossesObject = PlayerData->GetObjectField("Losses");
 
-				FString Wins = WinsObject->GetStringField("N");
-				FString Losses = LossesObject->GetStringField("N");
+				extern FString Wins = WinsObject->GetStringField("N");
+				extern FString Losses = LossesObject->GetStringField("N");
+
 
 
 
