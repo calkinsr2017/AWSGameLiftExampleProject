@@ -163,15 +163,6 @@ void UMainMenuWidget::OnGetOculusResponseRecieved(FHttpRequestPtr Request, FHttp
 				GetPlayerDataRequest->SetVerb("GET");
 				GetPlayerDataRequest->ProcessRequest();
 
-				
-
-				
-				
-				//Call to switch widgets once used
-				OnLoginComplete.Broadcast();
-
-
-
 			}
 		}
 	}
@@ -201,9 +192,12 @@ void UMainMenuWidget::OnGetOculusPlayerDataResponseRecieved(FHttpRequestPtr Requ
 
 				FString id = JsonObject->GetStringField("id");
 				FString alias = JsonObject->GetStringField("alias");
-				
-				UE_LOG(LogOculus, Log, TEXT("%s   id: %s  alias: %s"), __FUNCTIONW__, *id, *alias);
+
 				//maybe try and add this info to a dynamodb table 
+				UE_LOG(LogOculus, Log, TEXT("%s   id: %s  alias: %s"), __FUNCTIONW__, *id, *alias);
+
+				//Call to switch widgets once used
+				OnLoginCompleteOculus.Broadcast(OauthToken, alias);
 			}
 		}
 	}
@@ -244,7 +238,7 @@ void UMainMenuWidget::OnExchangeCodeForTokensResponseRecieved(FHttpRequestPtr Re
 						GetPlayerDataRequest->ProcessRequest();
 						
 						//Call to switch widgets once used
-						OnLoginComplete.Broadcast();
+						OnLoginCompleteAWSService.Broadcast();
 
 					}
 				}
