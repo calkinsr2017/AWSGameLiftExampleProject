@@ -29,7 +29,7 @@ very basic, but it shows that you can use OAuth 2.0 to generate a json data with
 NOTE: For step 9, do not attempt to use the Facebook option to login, that is currently broken. Please use the alternative method where you sign in with the email you signed up Oculus with for step 8. This is a bug we plan to fix eventually.
 
 ### TODO 
-(1) - Fix bug with logging in through Facebook in the Oculus website
-(2) - Figure out how to add Test Users to test this build.
-(3) - Set up Oculus as an Identity Provider with a UserInfo endpoint.
-(4) - Test friends + leaderboard through EOS.
+1. Fix bug with logging in through Facebook in the Oculus website
+2. Figure out how to add Test Users to test this build.
+3. Set up Oculus as an Identity Provider with a UserInfo endpoint.
+4. Test friends + leaderboard through EOS.
