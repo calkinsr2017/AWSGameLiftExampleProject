@@ -9,6 +9,8 @@
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLoginCompleteEvent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLoginCompleteEventOculus, FString, OAuthToken, FString, AliasName);
+
 class UWebBrowser;
 /**
  * 
@@ -27,7 +29,10 @@ public:
 		FTimerHandle SetAveragePlayerLatencyHandle;
 
 	UPROPERTY(BlueprintAssignable)
-		FOnLoginCompleteEvent OnLoginComplete;
+		FOnLoginCompleteEvent OnLoginCompleteAWSService;
+
+	UPROPERTY(BlueprintAssignable)
+		FOnLoginCompleteEventOculus OnLoginCompleteOculus;
 
 	UFUNCTION(BlueprintCallable)
 		void AttemptOculusLogin();

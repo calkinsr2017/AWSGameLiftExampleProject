@@ -4,6 +4,7 @@
 
 #include "GameLiftTutorial.h"
 #include "GameLiftTutorialCharacter.h"
+#include "GameliftTutorialPlayerController.h"
 #include "HttpModule.h"
 #include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
@@ -17,6 +18,7 @@ AGameLiftTutorialGameMode::AGameLiftTutorialGameMode()
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
+
 
 	HttpModule = &FHttpModule::Get();
 }
