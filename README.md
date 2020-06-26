@@ -4,10 +4,10 @@ This is an example project for doing a simple authorization of Oculus via a logi
 
 # What you will need
 
-(1) - Git bash: https://gitforwindows.org/
-(2) - Unreal Engine 4.24 - where you can install it from the Epic Games Launcher. You may need to make an account for this if you don't have one. https://www.epicgames.com/store/en-US/download. From there you can go to Unreal Engine -> Library -> click the plus sign and install Unreal Engine version 4.24.3
-(3) - Oculus download: https://www.oculus.com/setup/
-(4) - Visual Studio 2019 or 2017 community version.
+1. Git bash: https://gitforwindows.org/
+2. Unreal Engine 4.24 - where you can install it from the Epic Games Launcher. You may need to make an account for this if you don't have one. https://www.epicgames.com/store/en-US/download. From there you can go to Unreal Engine -> Library -> click the plus sign and install Unreal Engine version 4.24.3
+3. Oculus download: https://www.oculus.com/setup/
+4. Visual Studio 2019 or 2017 community version.
 
 NOTE: This project was only tested with Windows. I am not sure if all the things above can be used with other OSes.
 
