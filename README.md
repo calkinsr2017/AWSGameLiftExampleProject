@@ -14,7 +14,7 @@ NOTE: This project was only tested with Windows. I am not sure if all the things
 ### Steps to get this project setup.
 1. Open up git bash through your machine - Windows preferably, haven't tested out other  - and run `git clone https://github.com/calkinsr2017/AWSGameLiftExampleProject.git`
 2. Through git bash still, cd into your newest directory made from step (1) and run `git checkout OculusLoginFunctionality`
-3. With UE 4.24 installed, right click the ".uproject" file and click "Switch Unreal Engine version" and select 4.24. This will show up if you have installed UE 4.24. Then right click "Generate Visual Studio project files." This should generate the folders needed in Visual Studio's side of things.
+3. With UE 4.24 installed, right click the ".uproject" file and click "Switch Unreal Engine version" and select 4.24. This will show up if you have installed UE 4.24. Then right click the .uproject again and click "Generate Visual Studio project files." This should generate the folders needed in Visual Studio's side of things.
 4. Open up the .sln that gets made and make sure the build environment is set to "Development Editor" and "Win64."
 5. Click build solution at the top.
 6. Input the Oculus clientID + clientSecretId into a new directory you make called "Urls" in the "Content" folder of this project. 
