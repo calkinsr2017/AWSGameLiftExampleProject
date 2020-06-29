@@ -10,13 +10,6 @@ AGameliftTutorialPlayerController::AGameliftTutorialPlayerController()
 	
 }
 
-void AGameliftTutorialPlayerController::SetupPlayerInput()
-{
-	Super::SetupInputComponent(InputComponent);
-
-	
-}
-
 void AGameliftTutorialPlayerController::QuitGame()
 {
 	UKismetSystemLibrary::QuitGame(GetWorld(), this, EQuitPreference::Quit, false);
